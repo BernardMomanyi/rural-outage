@@ -170,4 +170,11 @@ Contributors will be recognized in:
 - Contributor hall of fame
 - GitHub contributors page
 
+## 📞 Contact
+
+For questions about contributing:
+- **Maintainer**: Bernard Momanyi
+- **Email**: benmomanyi969@gmail.com
+- **GitHub**: [BernardMomanyi](https://github.com/BernardMomanyi)
+
 Thank you for contributing to OutageSys! Your help makes this project better for everyone. 

@@ -39,7 +39,7 @@
             <li>Support role-based access and secure system management.</li>
           </ul>
           <h2>Team & Institution</h2>
-          <p>Developed by: <b>[Your Name / Team Name]</b><br>Institution: <b>[Your Institution Name]</b><br>GitHub: <b><a href="https://github.com/yourusername/outagesys" target="_blank">github.com/yourusername/outagesys</a></b></p>
+          <p>Developed by: <b>Bernard Momanyi</b><br>Institution: <b>Jomo Kenyatta University of Agriculture and Technology</b><br>GitHub: <b><a href="https://github.com/BernardMomanyi/outagesys" target="_blank">github.com/BernardMomanyi/outagesys</a></b></p>
           <h2>Current Version</h2>
           <p>Version: <b>1.2.0</b> - Enhanced with advanced analytics, improved security, and better user experience.</p>
         </section>

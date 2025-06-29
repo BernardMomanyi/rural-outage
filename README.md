@@ -37,7 +37,7 @@ A smart, web-based system designed to predict, manage, and reduce power outages 
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/outagesys.git
+   git clone https://github.com/BernardMomanyi/outagesys.git
    cd outagesys
    ```
 
@@ -170,15 +170,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- **Developer**: [Your Name]
-- **Institution**: [Your Institution]
+- **Developer**: Bernard Momanyi
+- **Institution**: Jomo Kenyatta University of Agriculture and Technology
 - **Project**: Rural Power Outage Management System
 
 ## 📞 Support
 
 For support and questions:
 - Create an issue in the GitHub repository
-- Contact: [your-email@example.com]
+- Contact: benmomanyi969@gmail.com
 
 ## 🔄 Version History
 

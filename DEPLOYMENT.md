@@ -16,7 +16,7 @@ This guide provides step-by-step instructions for deploying OutageSys in differe
    cd C:\xampp\htdocs\
    
    # Clone or copy the project
-   git clone https://github.com/yourusername/outagesys.git
+   git clone https://github.com/BernardMomanyi/outagesys.git
    cd outagesys
    ```
 
@@ -237,7 +237,7 @@ APP_DEBUG=false
 ### Support
 
 For deployment issues:
-- Check the [GitHub issues](https://github.com/yourusername/outagesys/issues)
+- Check the [GitHub issues](https://github.com/BernardMomanyi/outagesys/issues)
 - Review server error logs
 - Contact system administrator
 
