@@ -1,0 +1,77 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+  header('Location: dashboard.php');
+  exit;
+}
+$role = $_SESSION['role'];
+$username = $_SESSION['username'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Data - OutageSys</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+</head>
+<body class="<?php echo htmlspecialchars($role); ?>">
+  <div class="dashboard">
+    <aside class="sidebar">
+      <h2>OutageSys</h2>
+      <nav>
+        <a href="index.html"><i class="fa fa-home"></i> Home</a>
+        <a href="dashboard.php"><i class="fa fa-tachometer-alt"></i> Dashboard</a>
+        <a href="substations.php"><i class="fa fa-bolt"></i> Substations</a>
+        <a href="reports.php"><i class="fa fa-file-alt"></i> Reports</a>
+        <a href="upload.php" class="active"><i class="fa fa-upload"></i> Upload Data</a>
+        <a href="map.php"><i class="fa fa-map-marked-alt"></i> Map View</a>
+        <a href="users.php"><i class="fa fa-users-cog"></i> Users</a>
+        <a href="settings.php"><i class="fa fa-cogs"></i> Settings</a>
+        <a href="about.html"><i class="fa fa-info-circle"></i> About</a>
+        <a href="contact.html"><i class="fa fa-envelope"></i> Contact</a>
+      </nav>
+      <form action="logout.php" method="post" style="margin-top: 18px;">
+        <button class="logout-btn" type="submit"><i class="fa fa-sign-out-alt"></i> Logout</button>
+      </form>
+    </aside>
+    <main class="main-content">
+      <h1>Upload Outage Data</h1>
+      <section class="upload-section">
+        <form id="uploadForm" enctype="multipart/form-data" method="POST" action="#">
+          <input type="file" name="csvFile" accept=".csv" />
+          <button type="submit" class="btn"><i class="fa fa-upload"></i> Upload</button>
+        </form>
+        <div class="upload-result" style="margin-top: 12px; color: var(--success);">Upload successful! (Sample)</div>
+      </section>
+      <h2>Upload History</h2>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Filename</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2024-05-01</td>
+            <td>outages_april.csv</td>
+            <td class="status-online">Processed</td>
+          </tr>
+          <tr>
+            <td>2024-04-01</td>
+            <td>outages_march.csv</td>
+            <td class="status-online">Processed</td>
+          </tr>
+        </tbody>
+      </table>
+      <footer class="footer">
+        <div>&copy; 2024 OutageSys</div>
+      </footer>
+    </main>
+  </div>
+</body>
+</html> 

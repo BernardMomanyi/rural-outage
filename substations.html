@@ -1,0 +1,75 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php');
+  exit;
+}
+$role = $_SESSION['role'];
+$username = $_SESSION['username'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Substations - OutageSys</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+</head>
+<body class="<?php echo htmlspecialchars($role); ?>">
+  <div class="dashboard">
+    <?php include 'sidebar.php'; ?>
+    <main class="main-content">
+      <h1>Substation Management</h1>
+      <?php if ($role === 'admin' || $role === 'technician'): ?>
+      <button class="btn" style="margin-bottom: 18px;"><i class="fa fa-plus"></i> Add New Substation</button>
+      <?php endif; ?>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>County</th>
+            <th>Status</th>
+            <th>Risk</th>
+            <?php if ($role === 'admin' || $role === 'technician'): ?><th>Actions</th><?php endif; ?>
+          </tr>
+        </thead>
+        <tbody id="substationTableBody">
+          <!-- Populated by JS or backend -->
+          <tr>
+            <td>001</td>
+            <td>Kapsabet</td>
+            <td>Nandi</td>
+            <td class="status-online">Online</td>
+            <td class="risk-low">Low</td>
+            <?php if ($role === 'admin' || $role === 'technician'): ?>
+            <td>
+              <button class="edit-btn"><i class="fa fa-edit"></i> Edit</button>
+              <button class="delete-btn"><i class="fa fa-trash"></i> Delete</button>
+            </td>
+            <?php endif; ?>
+          </tr>
+          <tr>
+            <td>002</td>
+            <td>Naivasha</td>
+            <td>Nakuru</td>
+            <td class="status-offline">Offline</td>
+            <td class="risk-high">High</td>
+            <?php if ($role === 'admin' || $role === 'technician'): ?>
+            <td>
+              <button class="edit-btn"><i class="fa fa-edit"></i> Edit</button>
+              <button class="delete-btn"><i class="fa fa-trash"></i> Delete</button>
+            </td>
+            <?php endif; ?>
+          </tr>
+        </tbody>
+      </table>
+      <footer class="footer">
+        <div>&copy; 2024 OutageSys</div>
+      </footer>
+    </main>
+  </div>
+</body>
+</html> 

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OutageSys - Rural Power Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <h2>OutageSys</h2>
+      <nav>
+        <a href="index.html" class="active">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="substations.html">Substations</a>
+        <a href="reports.html">Reports</a>
+        <a href="upload.html">Upload Data</a>
+        <a href="map.html">Map View</a>
+        <a href="users.html">Users</a>
+        <a href="settings.html">Settings</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </aside>
+    <main class="main-content" role="main">
+      <div class="dashboard-grid">
+        <div class="card">
+          <h2>Welcome to OutageSys</h2>
+          <section class="hero">
+            <h1>Empowering Rural Kenya with Smart Power Solutions</h1>
+            <p class="cta">Predict, manage, and prevent outages before they happen.</p>
+            <a href="login.html" class="cta-btn">Start Prediction / Login</a>
+          </section>
+          <section class="overview">
+            <h2>Project Overview</h2>
+            <p>OutageSys is a smart, responsive web-based system designed to predict, manage, and reduce power outages in rural areas by leveraging historical data, analytics, and real-time reporting. Our mission is to improve rural electricity reliability and empower communities with data-driven insights.</p>
+          </section>
+          <section class="stats">
+            <div class="card">Total Substations: <span id="totalSubstations">47</span></div>
+            <div class="card">Outages Prevented: <span id="outagesPrevented">120+</span></div>
+            <div class="card">Active Users: <span id="activeUsers">15</span></div>
+          </section>
+          <section class="features">
+            <h2>Core Features</h2>
+            <ul>
+              <li><b>Outage Prediction Engine:</b> Uses statistical models to predict possible power outages and helps in early detection of high-risk substations.</li>
+              <li><b>Interactive Substation Map:</b> Visual display of all rural substations, showing status and predicted risk level.</li>
+              <li><b>Real-Time Dashboard Analytics:</b> Number of active substations, outage trends, critical alerts, and easy-to-read summaries.</li>
+              <li><b>CSV Data Upload:</b> Upload past outage reports or substation logs to improve prediction accuracy.</li>
+              <li><b>Admin Management Tools:</b> Add, edit, and delete substations; update system thresholds and prediction parameters.</li>
+              <li><b>Secure User Login:</b> Role-based access for Admin, Technician, and Viewer.</li>
+            </ul>
+          </section>
+          <section class="substations">
+            <h2>Substation List (Kenya)</h2>
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>County</th>
+                  <th>Status</th>
+                  <th>Predicted Risk</th>
+                </tr>
+              </thead>
+              <tbody id="substationTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </section>
+          <section class="map-section">
+            <h2>Substation Map</h2>
+            <div id="map" style="height: 450px; border-radius: 16px; overflow: hidden;"></div>
+          </section>
+          <section class="upload-section">
+            <h2>Upload Outage Data (CSV)</h2>
+            <form id="uploadForm" enctype="multipart/form-data" method="POST" action="http://localhost/api/upload.php">
+              <input type="file" name="csvFile" accept=".csv" />
+              <button type="submit">Upload</button>
+            </form>
+          </section>
+          <section class="charts">
+            <canvas id="outageTrendChart"></canvas>
+          </section>
+        </div>
+        <div class="card">
+          <h2>Loading Example</h2>
+          <div class="skeleton" style="width: 80%; height: 24px;"></div>
+          <div class="skeleton" style="width: 60%; height: 18px;"></div>
+          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+        </div>
+      </div>
+      <footer class="footer" role="contentinfo">
+        <div>&copy; 2024 OutageSys | <a href="privacy_policy.html">Privacy Policy</a></div>
+      </footer>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html> 

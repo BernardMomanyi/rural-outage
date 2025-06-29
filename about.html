@@ -1,0 +1,58 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id'])) {
+  header('Location: login.php');
+  exit;
+}
+$role = $_SESSION['role'];
+$username = $_SESSION['username'];
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About - OutageSys</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet"/>
+</head>
+<body>
+  <div class="dashboard">
+    <?php include 'sidebar.php'; ?>
+    <main class="main-content" role="main">
+      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.html">Home</a></li><li>›</li><li>About</li></ol></nav>
+      <div class="dashboard-grid">
+        <div class="card">
+          <h2>About OutageSys</h2>
+          <section class="overview">
+            <h2>Project Overview</h2>
+            <p>OutageSys is a smart, web-based system designed to predict, manage, and reduce power outages in rural Kenya. By leveraging historical data, analytics, and real-time reporting, we aim to improve electricity reliability and empower communities with actionable insights.</p>
+          </section>
+          <section class="features">
+            <h2>Problem Statement</h2>
+            <p>Unplanned power outages in rural areas cause economic losses and hinder development. There is a need for a predictive, data-driven approach to minimize these disruptions.</p>
+            <h2>Objectives</h2>
+            <ul>
+              <li>Predict and prevent power outages using advanced analytics.</li>
+              <li>Provide real-time monitoring and reporting for substations.</li>
+              <li>Enable easy data upload and management for system users.</li>
+              <li>Support role-based access and secure system management.</li>
+            </ul>
+            <h2>Team & Institution</h2>
+            <p>Developed by: <b>Your Name / Team</b><br>Institution: <b>Your Institution (if academic)</b></p>
+          </section>
+        </div>
+        <div class="card">
+          <h2>Loading Example</h2>
+          <div class="skeleton" style="width: 80%; height: 24px;"></div>
+          <div class="skeleton" style="width: 60%; height: 18px;"></div>
+          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+        </div>
+      </div>
+      <footer class="footer" role="contentinfo">
+        <div>&copy; 2024 OutageSys | <a href="privacy_policy.html">Privacy Policy</a></div>
+      </footer>
+    </main>
+  </div>
+</body>
+</html> 
