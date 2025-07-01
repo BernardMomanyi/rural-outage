@@ -34,19 +34,20 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
     .msg-area { margin-bottom: 12px; min-height: 24px; }
     .msg-success { color: #16a34a; }
     .msg-error { color: #e53e3e; }
+    .table-empty { text-align: center; }
   </style>
 </head>
 <body class="admin">
   <!-- Topbar with Home and Avatar -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--card-bg);box-shadow:0 2px 8px var(--shadow);">
-    <a href="index.php" style="font-size:1.2rem;font-weight:600;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px;">
-      <i class="fa fa-home" style="width:22px;height:22px;"></i> Home
+  <div class="topbar">
+    <a href="index.php" class="home-link">
+      <i class="fa fa-home lucide-icon"></i> Home
     </a>
-    <div class="avatar" style="width:40px;height:40px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:1.2rem;">
+    <div class="avatar">
       <?php if (!empty($avatar)): ?>
-        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy" />
+        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" loading="lazy" />
       <?php elseif ($name === 'admin'): ?>
-        <i class="fa fa-user" style="width:24px;height:24px;color:#fff;"></i>
+        <i class="fa fa-user lucide-icon-large"></i>
       <?php else: ?>
         <?php echo strtoupper(substr($name,0,1)); ?>
       <?php endif; ?>
@@ -56,7 +57,13 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
     <?php include 'sidebar.php'; ?>
     <main class="main-content page-transition" role="main">
       <div aria-live="polite" id="ariaLiveRegion"></div>
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Admin Dashboard</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Admin Dashboard</li>
+        </ol>
+      </nav>
       <div class="dashboard-grid">
         <div class="card">
           <h2>Welcome, <?php echo isset($name) ? htmlspecialchars($name) : 'Admin'; ?> (Admin)</h2>
@@ -92,9 +99,9 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -148,7 +155,7 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
           const tbody = document.querySelector('#assignmentTable tbody');
           tbody.innerHTML = '';
           if (!assignments.length) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No assignments found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No assignments found.</td></tr>';
             return;
           }
           assignments.forEach(a => {
@@ -223,7 +230,7 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
           const tbody = document.querySelector('#ticketTable tbody');
           tbody.innerHTML = '';
           if (!tickets.length) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No tickets found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="table-empty">No tickets found.</td></tr>';
             return;
           }
           tickets.forEach(t => {
@@ -275,7 +282,7 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
           const tbody = document.querySelector('#suggestionTable tbody');
           tbody.innerHTML = '';
           if (!suggestions.length) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No suggestions found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="table-empty">No suggestions found.</td></tr>';
             return;
           }
           suggestions.forEach(s => {
@@ -283,7 +290,7 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
               <td>${s.technician||'-'}</td>
               <td>${s.suggestion}</td>
               <td>${s.created_at||'-'}</td>
-              <td><button onclick="deleteSuggestion(${s.id})" style="color:#e53e3e;background:none;border:none;cursor:pointer;">Delete</button></td>
+              <td><button onclick="deleteSuggestion(${s.id})" class="btn btn--danger btn--icon"><i class="fa fa-trash"></i></button></td>
             </tr>`;
           });
         });
@@ -309,7 +316,7 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
           const tbody = document.querySelector('#userUpdatesTable tbody');
           tbody.innerHTML = '';
           if (!updates.length) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No updates found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No updates found.</td></tr>';
             return;
           }
           updates.forEach(u => {
@@ -328,7 +335,8 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
     }
 

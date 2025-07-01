@@ -45,34 +45,31 @@ $username = $_SESSION['username'];
     <?php include 'sidebar.php'; ?>
     <main class="main-content page-transition" role="main">
       <div aria-live="polite" id="ariaLiveRegion"></div>
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Users</li></ol></nav>
-      <div class="dashboard-grid">
-        <div class="card">
-          <h2>User Management</h2>
-          <button class="cta-btn" id="addUserBtn" style="margin-bottom: 18px;"><i class="fa fa-user-plus"></i> Add New User</button>
-          <div id="userMsg"></div>
-          <form method="get" style="margin-bottom:16px;"><input type="search" name="q" placeholder="Search users..." aria-label="Search users" style="padding:6px 12px;border-radius:6px;border:1px solid #ccc;max-width:250px;" /></form>
-          <table class="styled-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="card">
-          <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
-        </div>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Users</li>
+        </ol>
+      </nav>
+      <button class="cta-btn margin-bottom" id="addUserBtn"><i class="fa fa-user-plus"></i> Add New User</button>
+      <div id="userMsg"></div>
+      <form method="get" class="search-form">
+        <input type="search" name="q" placeholder="Search users..." aria-label="Search users" class="search-input" />
+      </form>
+      <table class="styled-table">
+        <thead>
+          <tr><th>ID</th><th>Username</th><th>Role</th><th>Email</th><th>Action</th></tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr><td colspan="5" class="table-loading">Loading...</td></tr>
+        </tbody>
+      </table>
+      <div class="card">
+        <h2>Loading Example</h2>
+        <div class="skeleton skeleton-80"></div>
+        <div class="skeleton skeleton-60"></div>
+        <div class="skeleton skeleton-90"></div>
       </div>
       <footer class="footer" role="contentinfo">
         <div>&copy; 2024 OutageSys | <a href="privacy_policy.html">Privacy Policy</a></div>
@@ -83,8 +80,8 @@ $username = $_SESSION['username'];
     <div class="modal" id="userModal">
       <form id="userForm">
         <input type="hidden" id="userId" />
-        <div class="error-msg" id="userFormError" style="display:none;"></div>
-        <div class="success-msg" id="userFormSuccess" style="display:none;"></div>
+        <div class="error-msg display-none" id="userFormError"></div>
+        <div class="success-msg display-none" id="userFormSuccess"></div>
         <label>Username</label>
         <input type="text" id="userUsername" required />
         <label>Password (leave blank to keep current)</label>
@@ -118,7 +115,7 @@ $username = $_SESSION['username'];
           const tbody = document.getElementById('userTableBody');
           tbody.innerHTML = '';
           if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="table-empty">No users found.</td></tr>';
             return;
           }
           data.forEach(user => {
@@ -217,7 +214,8 @@ $username = $_SESSION['username'];
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
     }
     function showLoadingOverlay() {

@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reopen_id'])) {
 $profile_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
   if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
-    $profile_msg = '<span style="color:#e53e3e">Invalid CSRF token.</span>';
+    $profile_msg = '<span class="error-text">Invalid CSRF token.</span>';
   } else {
     $new_email = trim($_POST['email'] ?? '');
     $new_phone = trim($_POST['phone'] ?? '');
@@ -110,34 +110,18 @@ $my_reports = $my_reports->fetchAll(PDO::FETCH_ASSOC);
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-  <style>
-    .dashboard-section { margin-bottom: 32px; }
-    .dashboard-section h2 { color: #2563eb; margin-bottom: 12px; }
-    .welcome { background: #e0eafc; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 8px; font-weight: 600; }
-    .status-Normal { background: #d1fae5; color: #065f46; }
-    .status-Outage { background: #fee2e2; color: #b91c1c; }
-    .status-Predicted { background: #fef9c3; color: #92400e; }
-    .report-form input, .report-form textarea { width: 100%; margin-bottom: 12px; padding: 8px; border-radius: 6px; border: 1px solid #e0eafc; }
-    .report-form button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 1rem; cursor: pointer; }
-    .notifications-list { list-style: none; padding: 0; }
-    .notifications-list li { background: #f1f5f9; margin-bottom: 8px; padding: 10px 14px; border-radius: 8px; }
-    .insights { background: #f9fafb; border-radius: 12px; padding: 18px; }
-    .profile-form input { width: 100%; margin-bottom: 12px; padding: 8px; border-radius: 6px; border: 1px solid #e0eafc; }
-    .profile-form button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 10px 24px; font-size: 1rem; cursor: pointer; }
-  </style>
 </head>
 <body class="user">
   <!-- Topbar with Home and Avatar -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--card-bg);box-shadow:0 2px 8px var(--shadow);">
-    <a href="index.php" style="font-size:1.2rem;font-weight:600;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px;">
-      <i data-lucide="home" style="width:22px;height:22px;"></i> Home
+  <div class="topbar">
+    <a href="index.php" class="home-link">
+      <i data-lucide="home" class="lucide-icon"></i> Home
     </a>
-    <div class="avatar" style="width:40px;height:40px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:1.2rem;">
+    <div class="avatar">
       <?php if (!empty($avatar)): ?>
-        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy" />
+        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" loading="lazy" />
       <?php elseif ($name === 'admin'): ?>
-        <i data-lucide="user" style="width:24px;height:24px;color:#fff;"></i>
+        <i data-lucide="user" class="lucide-icon-large"></i>
       <?php else: ?>
         <?php echo strtoupper(substr($name,0,1)); ?>
       <?php endif; ?>
@@ -147,7 +131,13 @@ $my_reports = $my_reports->fetchAll(PDO::FETCH_ASSOC);
     <?php include 'sidebar.php'; ?>
     <main class="main-content page-transition" role="main">
       <div aria-live="polite" id="ariaLiveRegion"></div>
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Dashboard</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Dashboard</li>
+        </ol>
+      </nav>
       <div class="dashboard-grid">
         <div class="card">
           <h2>Welcome, <?php echo isset($user['name']) ? htmlspecialchars($user['name']) : 'User'; ?>!</h2>
@@ -180,33 +170,30 @@ $my_reports = $my_reports->fetchAll(PDO::FETCH_ASSOC);
                 <td><?php echo 'RPT-' . str_pad($r['id'], 3, '0', STR_PAD_LEFT); ?></td>
                 <td><?php echo htmlspecialchars($r['location']); ?></td>
                 <td><?php echo $r['status']; ?></td>
-                <td><?php echo $r['technician'] ? htmlspecialchars($r['technician']) : '<span style="color:#888;">-</span>'; ?></td>
-                <td><?php echo $r['technician_phone'] ? htmlspecialchars($r['technician_phone']) : '<span style="color:#888;">-</span>'; ?></td>
+                <td><?php echo $r['technician'] ? htmlspecialchars($r['technician']) : '<span class="placeholder-text">-</span>'; ?></td>
+                <td><?php echo $r['technician_phone'] ? htmlspecialchars($r['technician_phone']) : '<span class="placeholder-text">-</span>'; ?></td>
                 <td>
                   <?php if ($r['status'] === 'Resolved'): ?>
-                    <form method="post" style="display:inline;">
+                    <form method="post" class="inline-form">
                       <input type="hidden" name="feedback_id" value="<?php echo $r['id']; ?>" />
-                      <input type="text" name="feedback_text" placeholder="Feedback..." required style="width:100px;" />
+                      <input type="text" name="feedback_text" placeholder="Feedback..." required class="inline-input" />
                       <button class="btn btn--primary" type="submit">Submit</button>
                     </form>
                     <?php if ($r['feedback']): ?>
-                      <div class="success-msg" style="margin-top:4px;"><?php echo htmlspecialchars($r['feedback']); ?></div>
+                      <div class="success-msg inline-success"><?php echo htmlspecialchars($r['feedback']); ?></div>
                     <?php endif; ?>
                   <?php else: ?>
-                    <?php echo $r['feedback'] ? htmlspecialchars($r['feedback']) : '<span style="color:#888;">-</span>'; ?>
+                    <?php echo $r['feedback'] ? htmlspecialchars($r['feedback']) : '<span class="placeholder-text">-</span>'; ?>
                   <?php endif; ?>
                 </td>
                 <td>
                   <?php if ($r['status'] === 'Resolved' || $r['status'] === 'Assigned'): ?>
-                    <form method="post" style="display:inline;">
+                    <form method="post" class="inline-form">
                       <input type="hidden" name="reopen_id" value="<?php echo $r['id']; ?>" />
-                      <div class="btn-group">
-                        <button class="btn btn--secondary" type="submit">Reopen</button>
-                        <button class="btn btn--danger" type="button" onclick="showLoadingOverlay()">Delete</button>
-                      </div>
+                      <button class="btn btn--secondary" type="submit">Reopen</button>
                     </form>
                   <?php else: ?>
-                    <span style="color:#888;">-</span>
+                    <span class="placeholder-text">-</span>
                   <?php endif; ?>
                 </td>
               </tr>
@@ -216,9 +203,9 @@ $my_reports = $my_reports->fetchAll(PDO::FETCH_ASSOC);
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -226,82 +213,14 @@ $my_reports = $my_reports->fetchAll(PDO::FETCH_ASSOC);
       </footer>
     </main>
   </div>
-  <div class="loading-overlay" id="globalLoading" aria-hidden="true"><span class="custom-loader"></span></div>
-  <div class="feedback-icon success" id="feedbackSuccess" aria-hidden="true"><i class="fa fa-check-circle" aria-label="Success"></i></div>
-  <div class="feedback-icon error" id="feedbackError" aria-hidden="true"><i class="fa fa-times-circle" aria-label="Error"></i></div>
+  <script src="js/main.js"></script>
   <script>
-    // Fetch notifications for user
-    function fetchUserNotifications() {
-      fetch('api/notifications.php', { credentials: 'same-origin' })
-        .then(res => res.json())
-        .then(data => {
-          const ul = document.getElementById('userNotifications');
-          ul.innerHTML = '';
-          if (!data.length) {
-            ul.innerHTML = '<li>No notifications.</li>';
-            return;
-          }
-          data.forEach(n => {
-            ul.innerHTML += `<li>${n.message}</li>`;
-          });
-        });
-    }
-    fetchUserNotifications();
-    // Simulate maintenance for now
-    function fetchUserMaintenance() {
-      const tasks = [
-        { substation: 'Naivasha', task: 'Transformer check', date: '2024-07-01' },
-        { substation: 'Mombasa', task: 'Line inspection', date: '2024-07-03' }
-      ];
-      const ul = document.getElementById('userMaintenance');
-      ul.innerHTML = '';
-      tasks.forEach(t => {
-        ul.innerHTML += `<li>${t.substation} - ${t.task} (${t.date})</li>`;
-      });
-    }
-    fetchUserMaintenance();
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
-    }
-    // Show skeleton while loading (simulate async)
-    const dashboardSection = document.getElementById('dashboard-loading');
-    dashboardSection.style.display = 'block';
-    setTimeout(() => { dashboardSection.style.display = 'none'; }, 1200);
-    // Lucide icons
-    lucide.createIcons();
-    // Dark mode toggle
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark');
-      localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-    }
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-    function showLoadingOverlay() {
-      const overlay = document.getElementById('globalLoading');
-      overlay.setAttribute('aria-hidden', 'false');
-      setTimeout(() => overlay.setAttribute('aria-hidden', 'true'), 2000); // Demo: hide after 2s
-    }
-    function showFeedback(type) {
-      const region = document.getElementById('ariaLiveRegion');
-      if (type === 'success') {
-        document.getElementById('feedbackSuccess').classList.add('show');
-        document.getElementById('feedbackSuccess').setAttribute('aria-hidden', 'false');
-        region.textContent = 'Action successful!';
-        setTimeout(() => {
-          document.getElementById('feedbackSuccess').classList.remove('show');
-          document.getElementById('feedbackSuccess').setAttribute('aria-hidden', 'true');
-        }, 2000);
-      } else {
-        document.getElementById('feedbackError').classList.add('show');
-        document.getElementById('feedbackError').setAttribute('aria-hidden', 'false');
-        region.textContent = 'Action failed!';
-        setTimeout(() => {
-          document.getElementById('feedbackError').classList.remove('show');
-          document.getElementById('feedbackError').setAttribute('aria-hidden', 'true');
-        }, 2000);
-      }
     }
   </script>
 </body>

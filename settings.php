@@ -35,7 +35,7 @@ $settings = [
 $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
-    $msg = '<span style="color:#e53e3e">Invalid CSRF token.</span>';
+    $msg = '<span class="error-text">Invalid CSRF token.</span>';
   } else {
     $msg = 'Settings updated! (Demo only)';
   }
@@ -70,7 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="dashboard">
     <?php include 'sidebar.php'; ?>
     <main class="main-content" role="main">
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Settings</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Settings</li>
+        </ol>
+      </nav>
       <div class="dashboard-grid">
         <div class="card">
           <h2>Profile</h2>
@@ -178,14 +184,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <div class="form-group">
             <label>Request Account Deletion</label>
-            <button type="button" style="background:#e53e3e"><i class="fa fa-trash"></i> Delete My Account</button>
+            <button type="button" class="delete-account-btn"><i class="fa fa-trash"></i> Delete My Account</button>
           </div>
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -206,7 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
     }
     // Show skeleton while loading (simulate async)

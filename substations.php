@@ -33,10 +33,12 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
     <main class="main-content page-transition" role="main">
       <h1>Substation Management</h1>
       <?php if ($role === 'admin' || $role === 'technician'): ?>
-      <button class="btn btn--primary" id="addSubBtn" style="margin-bottom: 18px;"><i class="fa fa-plus"></i> Add New Substation</button>
+      <button class="btn btn--primary margin-bottom" id="addSubBtn"><i class="fa fa-plus"></i> Add New Substation</button>
       <?php endif; ?>
-      <div id="substationMsg"></div>
-      <form method="get" style="margin-bottom:16px;"><input type="search" name="q" placeholder="Search substations..." aria-label="Search substations" style="padding:6px 12px;border-radius:6px;border:1px solid #ccc;max-width:250px;" /></form>
+      <div id="subMsg"></div>
+      <form method="get" class="search-form">
+        <input type="search" name="q" placeholder="Search substations..." aria-label="Search substations" class="search-input" />
+      </form>
       <table class="styled-table">
         <thead>
           <tr>
@@ -51,7 +53,7 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
           </tr>
         </thead>
         <tbody id="substationTableBody">
-          <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+          <tr><td colspan="8" class="table-loading">Loading...</td></tr>
         </tbody>
       </table>
       <footer class="footer">
@@ -63,8 +65,8 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
     <div class="modal" id="subModal">
       <form id="subForm">
         <input type="hidden" id="subId" />
-        <div class="error-msg" id="subFormError" style="display:none;"></div>
-        <div class="success-msg" id="subFormSuccess" style="display:none;"></div>
+        <div class="error-msg display-none" id="subFormError"></div>
+        <div class="success-msg display-none" id="subFormSuccess"></div>
         <label>Name</label>
         <input type="text" id="subName" required />
         <label>County</label>
@@ -101,7 +103,7 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
           const tbody = document.getElementById('substationTableBody');
           tbody.innerHTML = '';
           if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No substations found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="table-empty">No substations found.</td></tr>';
             return;
           }
           data.forEach(sub => {

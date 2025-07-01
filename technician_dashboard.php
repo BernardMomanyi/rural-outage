@@ -74,17 +74,17 @@ $work_schedule = [
 </head>
 <body class="technician">
   <!-- Topbar with Home and Avatar -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--card-bg);box-shadow:0 2px 8px var(--shadow);">
-    <a href="index.php" style="font-size:1.2rem;font-weight:600;color:var(--primary);text-decoration:none;display:flex;align-items:center;gap:8px;">
-      <i data-lucide="home" style="width:22px;height:22px;"></i> Home
+  <div class="topbar">
+    <a href="index.php" class="home-link">
+      <i data-lucide="home" class="lucide-icon"></i> Home
     </a>
-    <div class="avatar" style="width:40px;height:40px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:1.2rem;">
-      <?php if (!empty($user['avatar'])): ?>
-        <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" loading="lazy" />
-      <?php elseif ((isset($user['name']) ? $user['name'] : '') === 'admin'): ?>
-        <i data-lucide="user" style="width:24px;height:24px;color:#fff;"></i>
+    <div class="avatar">
+      <?php if (!empty($avatar)): ?>
+        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="Avatar" loading="lazy" />
+      <?php elseif ($name === 'admin'): ?>
+        <i data-lucide="user" class="lucide-icon-large"></i>
       <?php else: ?>
-        <?php echo strtoupper(substr(isset($user['name']) ? $user['name'] : 'T',0,1)); ?>
+        <?php echo strtoupper(substr($name,0,1)); ?>
       <?php endif; ?>
     </div>
   </div>
@@ -92,7 +92,13 @@ $work_schedule = [
     <?php include 'sidebar.php'; ?>
     <main class="main-content page-transition" role="main">
       <div aria-live="polite" id="ariaLiveRegion"></div>
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Technician Dashboard</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Technician Dashboard</li>
+        </ol>
+      </nav>
       <div class="dashboard-grid">
         <div class="card">
           <h2>Welcome, <?php echo isset($user['name']) ? htmlspecialchars($user['name']) : 'Technician'; ?> (Technician)</h2>
@@ -120,9 +126,9 @@ $work_schedule = [
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -166,7 +172,7 @@ $work_schedule = [
       const tbody = document.querySelector('#assignedTable tbody');
       tbody.innerHTML = '';
       if (!subs.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No assigned substations.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No assigned substations.</td></tr>';
         return;
       }
       subs.forEach(s => {
@@ -281,7 +287,7 @@ $work_schedule = [
           const tbody = document.getElementById('techTickets');
           tbody.innerHTML = '';
           if (!tickets.length) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No tickets found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No tickets found.</td></tr>';
             return;
           }
           tickets.forEach(t => {
@@ -318,7 +324,8 @@ $work_schedule = [
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
     }
     // Show skeleton while loading (simulate async)

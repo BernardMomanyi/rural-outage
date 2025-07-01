@@ -48,9 +48,9 @@ $username = $_SESSION['username'];
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">

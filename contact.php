@@ -41,7 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
   <main class="main-content" role="main">
-    <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Contact</li></ol></nav>
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+      <ol>
+        <li><a href="index.php">Home</a></li>
+        <li>›</li>
+        <li>Contact</li>
+      </ol>
+    </nav>
     <div class="dashboard-grid">
       <div class="card">
         <h2>Contact Us</h2>
@@ -62,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="card">
         <h2>Loading Example</h2>
-        <div class="skeleton" style="width: 80%; height: 24px;"></div>
-        <div class="skeleton" style="width: 60%; height: 18px;"></div>
-        <div class="skeleton" style="width: 90%; height: 18px;"></div>
+        <div class="skeleton skeleton-80"></div>
+        <div class="skeleton skeleton-60"></div>
+        <div class="skeleton skeleton-90"></div>
       </div>
     </div>
     <footer class="footer" role="contentinfo">

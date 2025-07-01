@@ -35,7 +35,13 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
   <div class="dashboard">
     <?php include 'sidebar.php'; ?>
     <main class="main-content" role="main">
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Map View</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Map View</li>
+        </ol>
+      </nav>
       <div class="dashboard-grid">
         <div class="card">
           <h2>Map View</h2>
@@ -51,9 +57,9 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -78,7 +84,7 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
             else if (s.risk && s.risk.toLowerCase() === 'medium') color = 'orange';
             const icon = L.divIcon({
               className: '',
-              html: `<span style='display:inline-block;width:18px;height:18px;background:${color};border-radius:50%;border:2px solid #fff;'></span>`
+              html: `<span class="map-marker" style="background:${color};"></span>`
             });
             L.marker([s.latitude, s.longitude], { icon })
               .addTo(map)

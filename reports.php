@@ -28,15 +28,25 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
   <div class="dashboard">
     <?php include 'sidebar.php'; ?>
     <main class="main-content" role="main">
-      <nav aria-label="Breadcrumb" style="margin-bottom:12px;"><ol style="list-style:none;display:flex;gap:8px;padding:0;"><li><a href="index.php">Home</a></li><li>›</li><li>Reports</li></ol></nav>
+      <nav aria-label="Breadcrumb" class="breadcrumb">
+        <ol>
+          <li><a href="index.php">Home</a></li>
+          <li>›</li>
+          <li>Reports</li>
+        </ol>
+      </nav>
+      <div class="model-accuracy">
+        <div class="card">Model Accuracy: <span class="accuracy-value">92%</span></div>
+      </div>
+      <form method="get" class="search-form">
+        <input type="search" name="q" placeholder="Search reports..." aria-label="Search reports" class="search-input" />
+      </form>
       <div class="dashboard-grid">
         <div class="card">
-          <h2>Prediction Reports</h2>
-          <div style="margin-bottom: 18px;">
+          <h2>Outage Reports</h2>
+          <div class="margin-bottom">
             <button class="cta-btn" onclick="exportCSV()"><i class="fa fa-file-csv"></i> Export CSV</button>
           </div>
-          <div class="card" style="margin-bottom: 18px;">Model Accuracy: <span style="color: var(--success); font-weight: bold;">92%</span></div>
-          <form method="get" style="margin-bottom:16px;"><input type="search" name="q" placeholder="Search reports..." aria-label="Search reports" style="padding:6px 12px;border-radius:6px;border:1px solid #ccc;max-width:250px;" /></form>
           <table class="styled-table">
             <thead>
               <tr>
@@ -50,15 +60,15 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
               </tr>
             </thead>
             <tbody id="reportsTableBody">
-              <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
+              <tr><td colspan="7" class="table-loading">Loading...</td></tr>
             </tbody>
           </table>
         </div>
         <div class="card">
           <h2>Loading Example</h2>
-          <div class="skeleton" style="width: 80%; height: 24px;"></div>
-          <div class="skeleton" style="width: 60%; height: 18px;"></div>
-          <div class="skeleton" style="width: 90%; height: 18px;"></div>
+          <div class="skeleton skeleton-80"></div>
+          <div class="skeleton skeleton-60"></div>
+          <div class="skeleton skeleton-90"></div>
         </div>
       </div>
       <footer class="footer" role="contentinfo">
@@ -87,7 +97,7 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
           const tbody = document.getElementById('reportsTableBody');
           tbody.innerHTML = '';
           if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No reports found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No reports found.</td></tr>';
             return;
           }
           data.forEach(r => {
@@ -126,7 +136,8 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
     // Cookie consent banner
     if (!localStorage.getItem('cookieConsent')) {
       const banner = document.createElement('div');
-      banner.innerHTML = '<div style="background:#2563eb;color:#fff;padding:12px;text-align:center;z-index:9999;position:fixed;bottom:0;width:100%;">This site uses cookies for analytics and user experience. <button style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;background:#fff;color:#2563eb;cursor:pointer;" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button></div>';
+      banner.className = 'cookie-banner';
+      banner.innerHTML = 'This site uses cookies for analytics and user experience. <button class="cookie-btn" onclick="localStorage.setItem(\'cookieConsent\',1);this.parentNode.remove();">OK</button>';
       document.body.appendChild(banner);
     }
   </script>

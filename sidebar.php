@@ -27,7 +27,7 @@ if (!isset($role)) {
       <a href="settings.php" class="<?= basename($_SERVER['PHP_SELF']) === 'settings.php' ? 'active' : '' ?>"><i data-lucide="settings"></i> Settings</a>
     <?php endif; ?>
   </nav>
-  <form action="logout.php" method="post" style="margin-top: 18px;">
+  <form action="logout.php" method="post" class="logout-form">
     <button class="logout-btn" type="submit"><i data-lucide="log-out"></i> Logout</button>
   </form>
 </aside> 
