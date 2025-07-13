@@ -14,6 +14,106 @@ function require_login() {
     }
 }
 
+// Analytics data endpoint for legend
+if ($_GET['action'] === 'get_analytics_data') {
+    header('Content-Type: application/json');
+    
+    try {
+        // Get filter parameters
+        $start = isset($_GET['start']) ? $_GET['start'] : '';
+        $end = isset($_GET['end']) ? $_GET['end'] : '';
+        $substation = isset($_GET['substation']) ? $_GET['substation'] : '';
+        
+        // Build where clause
+        $where = [];
+        $params = [];
+        if ($start && $end) {
+            $where[] = 'o.start_time BETWEEN ? AND ?';
+            $params[] = $start . ' 00:00:00';
+            $params[] = $end . ' 23:59:59';
+        }
+        if ($substation && $substation !== 'all') {
+            $where[] = 'o.substation_id = ?';
+            $params[] = $substation;
+        }
+        $whereSql = $where ? ('WHERE ' . implode(' AND ', $where)) : '';
+        
+        // Get current stats
+        $resolved_where = $whereSql ? ($whereSql . " AND o.end_time IS NOT NULL") : "WHERE o.end_time IS NOT NULL";
+        $open_where = $whereSql ? ($whereSql . " AND o.end_time IS NULL") : "WHERE o.end_time IS NULL";
+        
+        $total_outages = $conn->prepare("SELECT COUNT(*) FROM outages o $whereSql");
+        $total_outages->execute($params);
+        $total_outages = $total_outages->fetchColumn();
+        
+        $resolved_outages = $conn->prepare("SELECT COUNT(*) FROM outages o $resolved_where");
+        $resolved_outages->execute($params);
+        $resolved_outages = $resolved_outages->fetchColumn();
+        
+        $open_outages = $conn->prepare("SELECT COUNT(*) FROM outages o $open_where");
+        $open_outages->execute($params);
+        $open_outages = $open_outages->fetchColumn();
+        
+        // Get recent activity (last 24 hours)
+        $recent_activity = $conn->prepare("
+            SELECT 
+                COUNT(CASE WHEN o.start_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 END) as new_outages_24h,
+                COUNT(CASE WHEN o.end_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 1 END) as resolved_24h,
+                AVG(CASE WHEN o.end_time IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, o.start_time, o.end_time) END) as avg_resolution_time
+            FROM outages o $whereSql
+        ");
+        $recent_activity->execute($params);
+        $activity = $recent_activity->fetch_assoc();
+        
+        // Get top substations by outage count
+        $top_substations = $conn->prepare("
+            SELECT s.name, COUNT(o.id) as outage_count
+            FROM outages o
+            JOIN substations s ON o.substation_id = s.id
+            $whereSql
+            GROUP BY s.id, s.name
+            ORDER BY outage_count DESC
+            LIMIT 3
+        ");
+        $top_substations->execute($params);
+        $result = $top_substations->get_result();
+        $top_substations_data = [];
+        while ($row = $result->fetch_assoc()) {
+            $top_substations_data[] = $row;
+        }
+        
+        $response = [
+            'success' => true,
+            'data' => [
+                'total_outages' => (int)$total_outages,
+                'resolved_outages' => (int)$resolved_outages,
+                'open_outages' => (int)$open_outages,
+                'recent_activity' => [
+                    'new_outages_24h' => (int)$activity['new_outages_24h'],
+                    'resolved_24h' => (int)$activity['resolved_24h'],
+                    'avg_resolution_time' => $activity['avg_resolution_time'] ? round($activity['avg_resolution_time']/60, 1) : 0
+                ],
+                'top_substations' => $top_substations_data,
+                'last_updated' => date('Y-m-d H:i:s'),
+                'filters' => [
+                    'start_date' => $start,
+                    'end_date' => $end,
+                    'substation' => $substation
+                ]
+            ]
+        ];
+        
+        echo json_encode($response);
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Database error: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
 switch ($action) {
     case 'login':
         // POST: username, password

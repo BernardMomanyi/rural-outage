@@ -1,12 +1,28 @@
 -- Outage Management System Database Schema
 
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role ENUM('admin','technician','user') NOT NULL DEFAULT 'user',
-    email VARCHAR(255) AFTER username,
-    phone VARCHAR(32) AFTER email
+-- Users table with enhanced profile fields
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  phone VARCHAR(20),
+  role ENUM('admin', 'technician', 'user') DEFAULT 'user',
+  status ENUM('active', 'inactive', 'suspended') DEFAULT 'active',
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  department VARCHAR(100),
+  position VARCHAR(100),
+  bio TEXT,
+  avatar VARCHAR(255),
+  two_factor ENUM('disabled', 'enabled', 'required') DEFAULT 'disabled',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  last_login TIMESTAMP NULL,
+  INDEX idx_username (username),
+  INDEX idx_email (email),
+  INDEX idx_role (role),
+  INDEX idx_status (status)
 );
 
 CREATE TABLE substations (

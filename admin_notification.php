@@ -1,18 +1,28 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+  header('Location: login.php');
+  exit;
+}
+$username = $_SESSION['username'];
+$avatar = isset($user['avatar']) ? $user['avatar'] : '';
+$name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $_SESSION['username'] : 'U');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to OutageSys</title>
+  <title>Post Notification - OutageSys Admin</title>
   <link rel="stylesheet" href="css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
   <style>
     body { min-height: 100vh; }
-    .home-bg {
+    .admin-bg {
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 0;
@@ -54,25 +64,20 @@
     <i class="fa fa-moon" id="modeIcon"></i> 
     <span id="modeText">Dark Mode</span>
   </button>
-
-  <div class="home-bg">
-    <div class="container">
-      <div class="card text-center" style="max-width: 450px; margin: 0 auto;">
-        <h1 class="h1 mb-md"><i class="fa fa-bolt"></i> OutageSys</h1>
-        <p class="mb-md">Welcome to OutageSys, your smart rural power outage prediction and management platform.</p>
-        <div class="grid grid-1 mb-md" style="gap: var(--space-sm);">
-          <a href="login.php" class="btn btn-primary mb-md"><i class="fa fa-sign-in-alt"></i> Login</a>
-          <a href="register.php" class="btn btn-outline mb-md"><i class="fa fa-user-plus"></i> Register</a>
-          <a href="about.php" class="btn btn-outline mb-md"><i class="fa fa-info-circle"></i> About Us</a>
-          <a href="contact.php" class="btn btn-outline"><i class="fa fa-envelope"></i> Contact</a>
+  <div class="admin-bg">
+    <div class="container" style="width:100%;">
+      <div class="card mb-md">
+        <h2 class="h2 mb-sm"><i class="fa fa-bell"></i> Post Notification</h2>
+        <p class="mb-md">Send a notification to all users or a specific group.</p>
+        <div class="text-center mt-md">
+          <span class="small" style="color:var(--color-secondary);">Notification form coming soon.</span>
         </div>
-        <div class="footer mt-md small" style="color: var(--color-secondary);">
-          &copy; 2024 OutageSys. All rights reserved.
-        </div>
+      </div>
+      <div class="footer mt-md small text-center" style="color: var(--color-secondary);">
+        &copy; 2024 OutageSys. All rights reserved.
       </div>
     </div>
   </div>
-
   <script>
     function setMode(dark) {
       document.body.classList.toggle('dark-mode', dark);
@@ -86,4 +91,4 @@
     if (localStorage.getItem('darkMode') === '1') setMode(true);
   </script>
 </body>
-</html>
+</html> 

@@ -12,8 +12,16 @@ $role = $_SESSION['role'];
 
 // GET: List all substations
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $pdo->query('SELECT * FROM substations');
-    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+    if ($q !== '') {
+        $like = '%' . $q . '%';
+        $stmt = $pdo->prepare('SELECT * FROM substations WHERE name LIKE ? OR county LIKE ? OR status LIKE ? OR risk LIKE ?');
+        $stmt->execute([$like, $like, $like, $like]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    } else {
+        $stmt = $pdo->query('SELECT * FROM substations');
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
     exit;
 }
 
