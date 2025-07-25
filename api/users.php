@@ -67,6 +67,11 @@ if ($_GET['action'] === 'get_users') {
             $whereConditions[] = 'role = ?';
             $params[] = $_GET['role'];
         }
+
+        // If fetching technicians, join with substations data
+        if (isset($_GET['role']) && $_GET['role'] === 'technician') {
+            $selectFields[] = "(SELECT GROUP_CONCAT(s.name SEPARATOR ', ') FROM technician_substations ts JOIN substations s ON ts.substation_id = s.id WHERE ts.technician_id = users.id) AS assigned_substations";
+        }
         
         $whereClause = $whereConditions ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
         $sql = "SELECT " . implode(', ', $selectFields) . " FROM users $whereClause ORDER BY id DESC";

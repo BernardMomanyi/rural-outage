@@ -156,14 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $description = trim($data['description'] ?? '');
             $priority = $data['priority'] ?? 'medium';
             $category = $data['category'] ?? 'general';
+            $location = $data['location'] ?? '';
 
-            if (empty($subject) || empty($description)) {
-                echo json_encode(['error' => 'Subject and description are required']);
+            if (empty($subject) || empty($description) || empty($location)) {
+                echo json_encode(['error' => 'Subject, description, and location are required']);
                 exit;
             }
 
-            $stmt = $pdo->prepare('INSERT INTO tickets (ticket_number, user_id, user_name, user_email, user_phone, subject, description, priority, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmt->execute([$ticket_number, $user_id, $user_name, $user_email, $user_phone, $subject, $description, $priority, $category]);
+            $stmt = $pdo->prepare('INSERT INTO tickets (ticket_number, user_id, user_name, user_email, user_phone, subject, description, priority, category, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([$ticket_number, $user_id, $user_name, $user_email, $user_phone, $subject, $description, $priority, $category, $location]);
 
             echo json_encode([
                 'success' => true,

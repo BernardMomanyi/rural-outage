@@ -60,6 +60,14 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
   </style>
 </head>
 <body>
+  <!-- Breadcrumbs navigation -->
+  <nav aria-label="Breadcrumb" class="breadcrumbs-nav" style="margin: 1.5rem auto 0 auto; max-width:900px; background:transparent;">
+    <ol class="breadcrumbs" style="display:flex; flex-wrap:wrap; gap:0.5em; list-style:none; padding:0; margin:0; font-size:1rem; background:transparent;">
+      <li><a href="admin_dashboard.php" class="breadcrumb-link"><i class="fa fa-tachometer-alt"></i> Admin Dashboard</a></li>
+      <li style="color:var(--color-secondary);">&gt;</li>
+      <li class="breadcrumb-current" style="color:var(--color-primary); font-weight:600;"><i class="fa fa-tools"></i> Technician Management</li>
+    </ol>
+  </nav>
   <button class="toggle-mode" id="darkModeToggle">
     <i class="fa fa-moon" id="modeIcon"></i> 
     <span id="modeText">Dark Mode</span>
@@ -69,8 +77,20 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
       <div class="card mb-md">
         <h2 class="h2 mb-sm"><i class="fa fa-users-cog"></i> Technicians</h2>
         <p class="mb-md">Manage and assign technicians to substations and tickets.</p>
-        <div class="text-center mt-md">
-          <span class="small" style="color:var(--color-secondary);">Technician management coming soon.</span>
+        <div id="techniciansTableContainer">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Assigned Substations</th>
+              </tr>
+            </thead>
+            <tbody id="techniciansTableBody">
+              <tr><td colspan="4" style="text-align:center;">Loading...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
       <div class="footer mt-md small text-center" style="color: var(--color-secondary);">
@@ -89,6 +109,36 @@ $name = isset($user['name']) ? $user['name'] : (isset($_SESSION['username']) ? $
       setMode(!document.body.classList.contains('dark-mode'));
     };
     if (localStorage.getItem('darkMode') === '1') setMode(true);
+
+    // Fetch and display technicians and their assigned substations
+    async function loadTechnicians() {
+      const tbody = document.getElementById('techniciansTableBody');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Loading...</td></tr>';
+      try {
+        const res = await fetch('api/users.php?action=get_users&role=technician');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+          if (data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No technicians found.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '';
+          data.users.forEach(tech => {
+            tbody.innerHTML += `<tr>
+              <td>${tech.id}</td>
+              <td>${tech.first_name || ''} ${tech.last_name || ''} <span style='color:#888;'>@${tech.username}</span></td>
+              <td>${tech.email || ''}</td>
+              <td>${tech.assigned_substations || '<span style=\'color:#aaa;\'>None</span>'}</td>
+            </tr>`;
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#c00;">Failed to load technicians.</td></tr>';
+        }
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#c00;">Error loading technicians.</td></tr>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadTechnicians);
   </script>
 </body>
 </html> 

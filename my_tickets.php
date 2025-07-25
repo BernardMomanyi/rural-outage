@@ -1,5 +1,7 @@
 <?php
 session_start();
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 if (!isset($_SESSION['user_id'])) {
   header('Location: login.php');
   exit;
@@ -10,6 +12,55 @@ $role = $_SESSION['role'];
 $dashboard_link = 'user_dashboard.php';
 if ($role === 'admin') $dashboard_link = 'admin_dashboard.php';
 if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
+
+require_once 'db.php';
+
+// Handle status update for technicians
+$status_msg = '';
+if ($role === 'technician' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ticket_id'], $_POST['status_action'])) {
+  $ticket_id = intval($_POST['ticket_id']);
+  $value = trim($_POST['status_action']);
+  $status_options = ['Submitted', 'Assigned', 'Resolved'];
+  $action_options = ['Inspected', 'Parts Ordered', 'Escalated', 'Other'];
+  if (in_array($value, $status_options, true)) {
+    $stmt = $pdo->prepare('UPDATE tickets SET status = ?, action_taken = NULL WHERE id = ? AND assigned_technician_id = ?');
+    $stmt->execute([$value, $ticket_id, $user_id]);
+    $status_msg = 'Ticket status updated!';
+  } elseif (in_array($value, $action_options, true)) {
+    $stmt = $pdo->prepare('UPDATE tickets SET action_taken = ? WHERE id = ? AND assigned_technician_id = ?');
+    $stmt->execute([$value, $ticket_id, $user_id]);
+    $status_msg = 'Ticket action updated!';
+  } else {
+    $status_msg = 'Invalid selection!';
+  }
+}
+
+// Fetch tickets for technician
+if ($role === 'technician') {
+  $stmt = $pdo->prepare('SELECT * FROM tickets WHERE assigned_technician_id = ? ORDER BY created_at DESC');
+  $stmt->execute([$user_id]);
+  $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+  $stmt = $pdo->prepare('SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC');
+  $stmt->execute([$user_id]);
+  $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Calculate analytics for all dropdown options except 'Other'
+$status_counts = [
+  'submitted' => 0,
+  'assigned' => 0,
+  'in_progress' => 0,
+  'resolved' => 0,
+  'closed' => 0,
+  'escalated' => 0
+];
+foreach ($tickets as $ticket) {
+  $status = strtolower($ticket['status']);
+  if (isset($status_counts[$status])) {
+    $status_counts[$status]++;
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,6 +91,13 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
       width: 100%;
       max-width: 1000px;
       padding: 2rem;
+      overflow-x: auto;
+    }
+    @media (max-width: 1100px) {
+      .container {
+        max-width: 100%;
+        padding: 1rem;
+      }
     }
     
     .card {
@@ -490,10 +548,44 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
         grid-template-columns: 1fr;
       }
     }
+    .tickets-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2em;
+    }
+    @media (max-width: 900px) {
+      .tickets-table th, .tickets-table td {
+        font-size: 0.95em;
+        padding: 0.5em 0.5em;
+      }
+    }
+    .tickets-table th, .tickets-table td { padding: 0.75em 1em; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    .tickets-table th { background: #f1f5ff; color: #2563eb; font-weight: 600; }
+    .tickets-table tr:last-child td { border-bottom: none; }
+    .status-form { display: flex; gap: 0.5em; align-items: center; margin: 0; }
+    .status-form select { padding: 0.3em 0.7em; border-radius: 6px; border: 1px solid #d1d5db; }
+    .status-form select { width: 80px; font-size: 0.8em; padding: 0.2em 0.5em; }
+    .status-form button { padding: 0.3em 1em; border-radius: 6px; border: none; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .status-form button:hover { background: #1d4ed8; }
+    .status-inspected {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .status-parts_ordered {
+      background: #fef9c3;
+      color: #b45309;
+    }
+    .status-escalated {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .status-submitted {
+      background: #fef3c7;
+      color: #d97706;
+    }
   </style>
 </head>
 <body>
-  <!-- Breadcrumbs navigation -->
   <nav aria-label="Breadcrumb" class="breadcrumbs-nav" style="margin: 1.5rem auto 0 auto; max-width:900px; background:transparent;">
     <ol class="breadcrumbs" style="display:flex; flex-wrap:wrap; gap:0.5em; list-style:none; padding:0; margin:0; font-size:1rem; background:transparent;">
       <li><a href="<?php echo $dashboard_link; ?>" class="breadcrumb-link"><i class="fa fa-tachometer-alt"></i> Dashboard</a></li>
@@ -501,447 +593,92 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
       <li class="breadcrumb-current" style="color:var(--color-primary); font-weight:600;"><i class="fa fa-ticket-alt"></i> My Tickets</li>
     </ol>
   </nav>
-
   <div class="my-tickets-bg">
     <div class="container">
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="card stat-card">
-          <div class="stat-icon"><i class="fa fa-ticket-alt"></i></div>
-          <div class="stat-number" id="totalTickets">Loading...</div>
-          <div class="stat-label">Total Tickets</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon"><i class="fa fa-clock"></i></div>
-          <div class="stat-number" id="pendingTickets">Loading...</div>
-          <div class="stat-label">Pending</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon"><i class="fa fa-user-cog"></i></div>
-          <div class="stat-number" id="assignedTickets">Loading...</div>
-          <div class="stat-label">Assigned</div>
-        </div>
-        <div class="card stat-card">
-          <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
-          <div class="stat-number" id="resolvedTickets">Loading...</div>
-          <div class="stat-label">Resolved</div>
+      <?php if (!empty($status_msg)) { echo '<div class="card" style="background:#dcfce7; color:#166534; margin-bottom:1em;">'.$status_msg.'</div>'; } ?>
+      <div class="card" style="margin-bottom:1.5em;">
+        <div style="display:flex; gap:1em; align-items:center; justify-content:center; flex-wrap:wrap;">
+          <span class="status-badge status-submitted">🕐 <?php echo $status_counts['submitted']; ?> Submitted</span>
+          <span class="status-badge status-assigned">👤 <?php echo $status_counts['assigned']; ?> Assigned</span>
+          <span class="status-badge status-in_progress">⚡ <?php echo $status_counts['in_progress']; ?> In Progress</span>
+          <span class="status-badge status-resolved">✅ <?php echo $status_counts['resolved']; ?> Resolved</span>
+          <span class="status-badge status-closed">🔒 <?php echo $status_counts['closed']; ?> Closed</span>
+          <span class="status-badge status-escalated">❗ <?php echo $status_counts['escalated']; ?> Escalated</span>
         </div>
       </div>
-
-      <!-- Quick Actions -->
-      <div class="card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 6px solid #0ea5e9;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="margin: 0; color: #0ea5e9; font-size: 1.2rem;">
-            <i class="fa fa-bolt"></i>
-            Quick Actions
-          </h3>
-          <button id="refreshTicketsBtn" class="btn btn-outline">
-            <i class="fa fa-sync-alt"></i>
-            Refresh
-          </button>
-        </div>
-        
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-          <a href="submit_ticket.php" class="btn btn-primary">
-            <i class="fa fa-plus"></i>
-            Submit New Ticket
-          </a>
-          <button id="exportTicketsBtn" class="btn btn-outline">
-            <i class="fa fa-download"></i>
-            Export My Tickets
-          </button>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="card" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 6px solid #f59e0b;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="margin: 0; color: #f59e0b; font-size: 1.2rem;">
-            <i class="fa fa-filter"></i>
-            Filter Tickets
-          </h3>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-          <div>
-            <label class="form-label">Status Filter</label>
-            <select id="statusFilter" class="form-select">
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">Priority Filter</label>
-            <select id="priorityFilter" class="form-select">
-              <option value="">All Priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label">Category Filter</label>
-            <select id="categoryFilter" class="form-select">
-              <option value="">All Categories</option>
-              <option value="technical">Technical</option>
-              <option value="billing">Billing</option>
-              <option value="service">Service</option>
-              <option value="general">General</option>
-              <option value="outage">Outage</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tickets List -->
       <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <div>
-            <h2 class="h2">
-              <i class="fa fa-ticket-alt"></i>
-              My Support Tickets
-            </h2>
-            <p class="small">Track the status of your support requests and contact information for assigned technicians.</p>
+        <h2 class="h2"><i class="fa fa-ticket-alt"></i> My Tickets</h2>
+        <?php if (empty($tickets)) { ?>
+          <div style="text-align:center; color:#6b7280; padding:2em;">
+            <i class="fa fa-ticket-alt" style="font-size:2em;"></i><br>No tickets assigned to you yet.
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <span id="ticketInfo" style="font-size: 0.9rem; color: #6b7280;">
-              Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> tickets
-            </span>
+        <?php } else { ?>
+          <div class="table-scroll">
+            <table class="tickets-table">
+              <thead>
+                <tr>
+                  <th>Ticket #</th>
+                  <th>Subject</th>
+                  <th>Description</th>
+                  <?php if ($role === 'technician') echo '<th>Priority</th>'; ?>
+                  <th>Status</th>
+                  <th>Action</th>
+                  <?php if ($role === 'technician') echo '<th></th>'; ?>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($tickets as $ticket) { ?>
+                  <tr>
+                    <td><?php echo htmlspecialchars($ticket['ticket_number']); ?></td>
+                    <td><?php echo htmlspecialchars($ticket['subject']); ?></td>
+                    <td class="ticket-description">
+                      <?php echo htmlspecialchars($ticket['description']); ?>
+                    </td>
+                    <?php if ($role === 'technician') { ?>
+                      <td>
+                        <span class="priority-badge priority-<?php echo htmlspecialchars(strtolower($ticket['priority'] ?? 'low')); ?>">
+                          <?php echo ucfirst(htmlspecialchars($ticket['priority'] ?? 'Low')); ?>
+                        </span>
+                      </td>
+                    <?php } ?>
+                    <td>
+                      <span class="status-badge status-<?php echo htmlspecialchars(strtolower(str_replace(' ', '_', $ticket['status']))); ?>">
+                        <?php echo ucfirst(str_replace('_', ' ', htmlspecialchars($ticket['status']))); ?>
+                      </span>
+                    </td>
+                    <td>
+                      <?php if ($role === 'technician') { ?>
+                        <form method="post" class="status-form">
+                          <input type="hidden" name="ticket_id" value="<?php echo $ticket['id']; ?>">
+                          <select name="status_action" required>
+                            <option value="Submitted" <?php if($ticket['status']==='Submitted')echo'selected';?>>Submitted</option>
+                            <option value="Assigned" <?php if($ticket['status']==='Assigned')echo'selected';?>>Assigned</option>
+                            <option value="Resolved" <?php if($ticket['status']==='Resolved')echo'selected';?>>Resolved</option>
+                            <option value="Inspected" <?php if(($ticket['action_taken'] ?? '')==='Inspected')echo'selected';?>>Inspected</option>
+                            <option value="Parts Ordered" <?php if(($ticket['action_taken'] ?? '')==='Parts Ordered')echo'selected';?>>Parts Ordered</option>
+                            <option value="Escalated" <?php if(($ticket['action_taken'] ?? '')==='Escalated')echo'selected';?>>Escalated</option>
+                          </select>
+                          <button type="submit">Update</button>
+                        </form>
+                      <?php } else { ?>
+                        <span style="background:#e0e7ff; color:#3730a3; border-radius:10px; padding:0.3em 0.8em; font-size:0.95em; font-weight:500;">
+                          <?php echo !empty($ticket['action_taken']) ? htmlspecialchars($ticket['action_taken']) : htmlspecialchars($ticket['status']); ?>
+                        </span>
+                      <?php } ?>
+                    </td>
+                    <?php if ($role === 'technician') echo '<td></td>'; ?>
+                  </tr>
+                <?php } ?>
+              </tbody>
+            </table>
           </div>
-        </div>
-        
-        <div id="ticketMsg"></div>
-        
-        <div id="ticketsList">
-          <div style="text-align: center; padding: 2rem; color: #6b7280;">
-            <div class="loading"></div>
-            <div style="margin-top: 0.5rem;">Loading your tickets...</div>
-          </div>
-        </div>
+        <?php } ?>
       </div>
-
       <div class="footer mt-md small text-center" style="color: var(--color-secondary);">
         &copy; 2024 OutageSys. All rights reserved.
       </div>
     </div>
   </div>
-
-  <!-- View Ticket Modal -->
-  <div class="modal-bg" id="viewModalBg">
-    <div class="modal" id="viewModal">
-      <div class="modal-header">
-        <h3 class="modal-title" id="viewModalTitle">Ticket Details</h3>
-        <button class="modal-close" id="viewModalClose">&times;</button>
-      </div>
-      
-      <div id="viewModalAlert" style="display: none;"></div>
-      
-      <div id="ticketFullDetails">
-        <!-- Full ticket details will be populated here -->
-      </div>
-      
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" id="viewCloseBtn">Close</button>
-        <a href="submit_ticket.php" class="btn btn-primary">
-          <i class="fa fa-plus"></i>
-          Submit New Ticket
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Global variables
-    let allTickets = [];
-    let filteredTickets = [];
-    
-    // Initialize
-    loadTickets();
-    loadStats();
-    
-    // Load statistics
-    function loadStats() {
-      fetch('api/tickets.php')
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            document.getElementById('totalTickets').textContent = data.length;
-            document.getElementById('pendingTickets').textContent = data.filter(t => t.status === 'pending').length;
-            document.getElementById('assignedTickets').textContent = data.filter(t => t.status === 'assigned' || t.status === 'in_progress').length;
-            document.getElementById('resolvedTickets').textContent = data.filter(t => t.status === 'resolved' || t.status === 'closed').length;
-          } else {
-            document.getElementById('totalTickets').textContent = '0';
-            document.getElementById('pendingTickets').textContent = '0';
-            document.getElementById('assignedTickets').textContent = '0';
-            document.getElementById('resolvedTickets').textContent = '0';
-          }
-        })
-        .catch(error => {
-          console.error('Error loading stats:', error);
-          document.getElementById('totalTickets').textContent = 'Error';
-          document.getElementById('pendingTickets').textContent = 'Error';
-          document.getElementById('assignedTickets').textContent = 'Error';
-          document.getElementById('resolvedTickets').textContent = 'Error';
-        });
-    }
-    
-    // Load tickets
-    function loadTickets() {
-      const statusFilter = document.getElementById('statusFilter').value;
-      const priorityFilter = document.getElementById('priorityFilter').value;
-      const categoryFilter = document.getElementById('categoryFilter').value;
-      
-      let url = 'api/tickets.php';
-      const params = [];
-      
-      if (statusFilter) params.push(`status=${statusFilter}`);
-      if (priorityFilter) params.push(`priority=${priorityFilter}`);
-      if (categoryFilter) params.push(`category=${categoryFilter}`);
-      
-      if (params.length > 0) {
-        url += '?' + params.join('&');
-      }
-      
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            allTickets = data;
-            filteredTickets = data;
-            displayTickets();
-            updateTicketInfo();
-          } else {
-            console.error('Invalid response format:', data);
-            allTickets = [];
-            filteredTickets = [];
-            displayTickets();
-          }
-        })
-        .catch(error => {
-          console.error('Error loading tickets:', error);
-          document.getElementById('ticketsList').innerHTML = `
-            <div style="text-align: center; color: #ef4444; padding: 2rem;">
-              <i class="fa fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-              Error loading tickets
-            </div>
-          `;
-        });
-    }
-    
-    // Display tickets
-    function displayTickets() {
-      const container = document.getElementById('ticketsList');
-      
-      if (!filteredTickets.length) {
-        container.innerHTML = `
-          <div style="text-align: center; color: #6b7280; padding: 2rem;">
-            <i class="fa fa-ticket-alt" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-            No tickets found. <a href="submit_ticket.php" style="color: #2563eb; text-decoration: none;">Submit your first ticket</a>
-          </div>
-        `;
-        return;
-      }
-      
-      container.innerHTML = filteredTickets.map(ticket => `
-        <div class="ticket-card ${ticket.priority}" data-ticket-id="${ticket.id}">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <h4 style="margin: 0; color: #374151; font-size: 1.1rem;">${ticket.subject}</h4>
-                <span class="priority-badge priority-${ticket.priority}">${ticket.priority}</span>
-                <span class="status-badge status-${ticket.status}">${ticket.status.replace('_', ' ')}</span>
-              </div>
-              <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                <strong>Ticket:</strong> ${ticket.ticket_number} • 
-                <strong>Category:</strong> ${ticket.category} • 
-                <strong>Created:</strong> ${new Date(ticket.created_at).toLocaleDateString()}
-              </div>
-              ${ticket.assigned_technician_name ? `
-                <div style="color: #059669; font-size: 0.9rem; background: #ecfdf5; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                  <strong>Assigned to:</strong> ${ticket.assigned_technician_name}
-                  ${ticket.assigned_technician_phone ? ` • Phone: ${ticket.assigned_technician_phone}` : ''}
-                  ${ticket.assigned_technician_email ? ` • Email: ${ticket.assigned_technician_email}` : ''}
-                </div>
-              ` : `
-                <div style="color: #f59e0b; font-size: 0.9rem; background: #fffbeb; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                  <i class="fa fa-clock"></i> Awaiting assignment to a technician
-                </div>
-              `}
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-outline btn-sm" onclick="viewTicket(${ticket.id})" title="View Details">
-                <i class="fa fa-eye"></i>
-                View
-              </button>
-            </div>
-          </div>
-          <div style="color: #374151; font-size: 0.9rem;">
-            ${ticket.description.substring(0, 150)}${ticket.description.length > 150 ? '...' : ''}
-          </div>
-        </div>
-      `).join('');
-    }
-    
-    // Update ticket info
-    function updateTicketInfo() {
-      document.getElementById('showingCount').textContent = filteredTickets.length;
-      document.getElementById('totalCount').textContent = allTickets.length;
-    }
-    
-    // Show notification
-    function showNotification(message, type = 'success') {
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#22c55e' : '#ef4444'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1001;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        max-width: 300px;
-        word-wrap: break-word;
-      `;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-      }, 100);
-      
-      setTimeout(() => {
-        notification.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 300);
-      }, 3000);
-    }
-    
-    // View ticket details
-    function viewTicket(ticketId) {
-      const ticket = allTickets.find(t => t.id == ticketId);
-      if (!ticket) {
-        showNotification('Ticket not found', 'error');
-        return;
-      }
-      
-      document.getElementById('ticketFullDetails').innerHTML = `
-        <div style="margin-bottom: 1rem;">
-          <h4 style="margin-bottom: 0.5rem; color: #374151;">Ticket Information</h4>
-          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-              <div><strong>Ticket Number:</strong> ${ticket.ticket_number}</div>
-              <div><strong>Status:</strong> <span class="status-badge status-${ticket.status}">${ticket.status.replace('_', ' ')}</span></div>
-              <div><strong>Priority:</strong> <span class="priority-badge priority-${ticket.priority}">${ticket.priority}</span></div>
-              <div><strong>Category:</strong> ${ticket.category}</div>
-              <div><strong>Created:</strong> ${new Date(ticket.created_at).toLocaleString()}</div>
-              <div><strong>Updated:</strong> ${new Date(ticket.updated_at).toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-        
-        ${ticket.assigned_technician_name ? `
-          <div style="margin-bottom: 1rem;">
-            <h4 style="margin-bottom: 0.5rem; color: #374151;">Assigned Technician</h4>
-            <div style="background: #ecfdf5; padding: 1rem; border-radius: 8px; border-left: 4px solid #10b981;">
-              <div><strong>Name:</strong> ${ticket.assigned_technician_name}</div>
-              <div><strong>Email:</strong> ${ticket.assigned_technician_email || 'Not provided'}</div>
-              <div><strong>Phone:</strong> ${ticket.assigned_technician_phone || 'Not provided'}</div>
-              <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #059669;">
-                <i class="fa fa-info-circle"></i> You can contact this technician directly for updates on your ticket.
-              </div>
-            </div>
-          </div>
-        ` : `
-          <div style="margin-bottom: 1rem;">
-            <h4 style="margin-bottom: 0.5rem; color: #374151;">Assignment Status</h4>
-            <div style="background: #fffbeb; padding: 1rem; border-radius: 8px; border-left: 4px solid #f59e0b;">
-              <div style="color: #d97706;">
-                <i class="fa fa-clock"></i> Your ticket is pending assignment to a technician.
-              </div>
-              <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #92400e;">
-                You will be notified when a technician is assigned to your ticket.
-              </div>
-            </div>
-          </div>
-        `}
-        
-        <div style="margin-bottom: 1rem;">
-          <h4 style="margin-bottom: 0.5rem; color: #374151;">Issue Details</h4>
-          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px;">
-            <div style="margin-bottom: 0.5rem;"><strong>Subject:</strong> ${ticket.subject}</div>
-            <div><strong>Description:</strong></div>
-            <div style="white-space: pre-wrap; margin-top: 0.5rem;">${ticket.description}</div>
-          </div>
-        </div>
-      `;
-      
-      document.getElementById('viewModalBg').style.display = 'flex';
-    }
-    
-    // Event listeners
-    document.getElementById('refreshTicketsBtn').addEventListener('click', function() {
-      this.innerHTML = '<div class="loading"></div> Refreshing...';
-      this.disabled = true;
-      
-      loadTickets();
-      loadStats();
-      
-      setTimeout(() => {
-        this.innerHTML = '<i class="fa fa-sync-alt"></i> Refresh';
-        this.disabled = false;
-      }, 1000);
-    });
-    
-    // Filter event listeners
-    document.getElementById('statusFilter').addEventListener('change', loadTickets);
-    document.getElementById('priorityFilter').addEventListener('change', loadTickets);
-    document.getElementById('categoryFilter').addEventListener('change', loadTickets);
-    
-    // Export tickets
-    document.getElementById('exportTicketsBtn').addEventListener('click', function() {
-      const csvContent = 'data:text/csv;charset=utf-8,' + 
-        'Ticket Number,Subject,Status,Priority,Category,Created,Assigned To\n' +
-        filteredTickets.map(ticket => 
-          `${ticket.ticket_number},"${ticket.subject}","${ticket.status}","${ticket.priority}","${ticket.category}","${ticket.created_at}","${ticket.assigned_technician_name || 'Unassigned'}"`
-        ).join('\n');
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement('a');
-      link.setAttribute('href', encodedUri);
-      link.setAttribute('download', 'my_tickets_export.csv');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      showNotification('Tickets exported successfully!', 'success');
-    });
-    
-    // Modal close handlers
-    document.getElementById('viewModalClose').addEventListener('click', function() {
-      document.getElementById('viewModalBg').style.display = 'none';
-    });
-    
-    document.getElementById('viewCloseBtn').addEventListener('click', function() {
-      document.getElementById('viewModalBg').style.display = 'none';
-    });
-    
-    // Close modal when clicking outside
-    document.getElementById('viewModalBg').addEventListener('click', function(e) {
-      if (e.target === this) {
-        this.style.display = 'none';
-      }
-    });
-  </script>
   <script src="js/dark-mode.js"></script>
 </body>
 </html> 

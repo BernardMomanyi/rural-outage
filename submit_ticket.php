@@ -4,12 +4,59 @@ if (!isset($_SESSION['user_id'])) {
   header('Location: login.php');
   exit;
 }
-$username = $_SESSION['username'];
+require_once 'db.php';
+
+// Block admins from creating tickets for themselves unless creating for a user
+if (
+  isset($_SESSION['role']) && $_SESSION['role'] === 'admin' && !isset($_POST['selected_user_id'])
+) {
+  // Fetch all non-admin users for the dropdown
+  $users = $pdo->query("SELECT id, username, email FROM users WHERE role != 'admin' ORDER BY username")->fetchAll(PDO::FETCH_ASSOC);
+  echo "<div class='card' style='margin:2em auto;max-width:500px;text-align:center;'>";
+  echo "<h3 style='color:#d97706;'><i class='fa fa-user-shield'></i> Admin: Create Ticket for User</h3>";
+  echo "<form method='post' style='margin-top:1em;'>";
+  echo "<label for='selected_user_id' class='form-label'>Select User</label>";
+  echo "<select name='selected_user_id' id='selected_user_id' class='form-select' required>";
+  echo "<option value=''>-- Choose a user --</option>";
+  foreach ($users as $user) {
+    echo "<option value='{$user['id']}'>{$user['username']} ({$user['email']})</option>";
+  }
+  echo "</select>";
+  echo "<button type='submit' class='btn btn-primary' style='margin-top:1em;'>Proceed to Ticket Form</button>";
+  echo "</form>";
+  echo "<p style='color:#888; margin-top:1em;'>Admins cannot create tickets for themselves. Please select a user to create a ticket on their behalf.</p>";
+  echo "</div>";
+  exit;
+}
+
+// If admin is creating for a user, override user_id, username, and email
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin' && isset($_POST['selected_user_id'])) {
+  $selected_user_id = intval($_POST['selected_user_id']);
+  $user_stmt = $pdo->prepare("SELECT id, username, email FROM users WHERE id = ?");
+  $user_stmt->execute([$selected_user_id]);
+  $selected_user = $user_stmt->fetch(PDO::FETCH_ASSOC);
+  if ($selected_user) {
+    $user_id = $selected_user['id'];
+    $username = $selected_user['username'];
+    $user_email = $selected_user['email'];
+    // Set a flag so the form uses these values
+    $_SESSION['admin_ticket_for_user'] = $selected_user;
+  } else {
+    echo "<p style='color:red;'>Invalid user selected.</p>";
+    exit;
+  }
+}
+
 $user_id = $_SESSION['user_id'];
+$username = $_SESSION['username'];
+$user_email = $_SESSION['email'] ?? '';
 $role = $_SESSION['role'];
 $dashboard_link = 'user_dashboard.php';
 if ($role === 'admin') $dashboard_link = 'admin_dashboard.php';
 if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
+
+// Fetch substations for location dropdown
+$substations = $pdo->query('SELECT id, name FROM substations ORDER BY name ASC')->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -377,7 +424,17 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
               <input type="tel" id="userPhone" class="form-input" placeholder="Optional - for faster contact" />
             </div>
           </div>
-          
+          <div class="form-group">
+            <label class="form-label">Location *</label>
+            <select id="ticketLocation" class="form-select" required onchange="handleLocationChange()">
+              <option value="">Select Location</option>
+              <?php foreach ($substations as $sub): ?>
+                <option value="<?php echo htmlspecialchars($sub['name']); ?>"><?php echo htmlspecialchars($sub['name']); ?></option>
+              <?php endforeach; ?>
+              <option value="other">Other (Specify...)</option>
+            </select>
+            <input type="text" id="customLocation" class="form-input" placeholder="Enter custom location" style="display:none; margin-top:0.5rem;" />
+          </div>
           <div class="form-group">
             <label class="form-label">Description *</label>
             <textarea id="ticketDescription" class="form-input" rows="6" placeholder="Please provide detailed information about your issue, including any error messages, steps to reproduce, and what you were trying to accomplish." required></textarea>
@@ -553,15 +610,19 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
       submitBtn.innerHTML = '<div class="loading"></div> Submitting...';
       submitBtn.disabled = true;
       
+      const locationSelect = document.getElementById('ticketLocation');
+      const customLocationInput = document.getElementById('customLocation');
+      let locationValue = locationSelect.value === 'other' ? customLocationInput.value : locationSelect.value;
       const formData = {
         action: 'create',
         user_name: '<?php echo htmlspecialchars($username); ?>',
-        user_email: '<?php echo htmlspecialchars($_SESSION['email'] ?? ''); ?>',
+        user_email: '<?php echo htmlspecialchars($user_email); ?>',
         user_phone: document.getElementById('userPhone').value,
         subject: document.getElementById('ticketSubject').value,
         description: document.getElementById('ticketDescription').value,
         priority: document.getElementById('ticketPriority').value,
-        category: document.getElementById('ticketCategory').value
+        category: document.getElementById('ticketCategory').value,
+        location: locationValue
       };
       
       fetch('api/tickets.php', {
@@ -637,6 +698,20 @@ if ($role === 'technician') $dashboard_link = 'technician_dashboard.php';
         setTimeout(() => {
           document.getElementById('ticketDescription').focus();
         }, 500);
+      }
+    }
+
+    function handleLocationChange() {
+      const locationSelect = document.getElementById('ticketLocation');
+      const customLocationInput = document.getElementById('customLocation');
+
+      if (locationSelect.value === 'other') {
+        customLocationInput.style.display = 'block';
+        customLocationInput.setAttribute('required', 'required');
+      } else {
+        customLocationInput.style.display = 'none';
+        customLocationInput.removeAttribute('required');
+        customLocationInput.value = ''; // Clear custom location if not selected
       }
     }
     

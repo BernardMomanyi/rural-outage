@@ -265,6 +265,31 @@ $dashboard_link = 'admin_dashboard.php';
       color: #6b7280;
     }
     
+    .status-submitted {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .status-assigned {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+    .status-in_progress {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .status-resolved {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+    .status-closed {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .status-escalated {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    
     .modal-bg {
       display: none;
       position: fixed;
@@ -452,6 +477,41 @@ $dashboard_link = 'admin_dashboard.php';
         grid-template-columns: 1fr;
       }
     }
+
+    .action-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: capitalize;
+      background: #e0e7ff;
+      color: #3730a3;
+      display: inline-block;
+    }
+    .action-inspected {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .action-parts_ordered {
+      background: #fef9c3;
+      color: #b45309;
+    }
+    .action-escalated {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .action-submitted {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .action-assigned {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+    .action-resolved {
+      background: #dcfce7;
+      color: #16a34a;
+    }
   </style>
 </head>
 <body>
@@ -502,6 +562,9 @@ $dashboard_link = 'admin_dashboard.php';
               <i class="fa fa-magic"></i>
               Auto Assign
             </button>
+            <span style="margin-left: 0.5em; color: #2563eb; font-size: 0.95em; cursor: help;" title="Auto Assign will only assign tickets that are still pending. You can always manually assign or reassign any ticket, which will override auto-assignment.">
+              <i class="fa fa-info-circle"></i> Auto Assign only affects pending tickets. Manual assignment always overrides.
+            </span>
             <button id="refreshTicketsBtn" class="btn btn-outline">
               <i class="fa fa-sync-alt"></i>
               Refresh
@@ -596,6 +659,52 @@ $dashboard_link = 'admin_dashboard.php';
         </div>
       </div>
 
+      <div class="card">
+        <h2 class="h2 mb-sm"><i class="fa fa-ticket-alt"></i> Ticket Management</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+          <input type="text" id="ticketSearch" class="form-input" placeholder="Search by ticket #, subject, or user..." style="flex:1; min-width:220px;">
+          <select id="statusFilterTable" class="form-select" style="width:auto;">
+            <option value="">All Status</option>
+            <option value="pending">🕐 Pending</option>
+            <option value="assigned">👤 Assigned</option>
+            <option value="in_progress">⚡ In Progress</option>
+            <option value="resolved">✅ Resolved</option>
+            <option value="closed">🔒 Closed</option>
+          </select>
+          <select id="priorityFilterTable" class="form-select" style="width:auto;">
+            <option value="">All Priorities</option>
+            <option value="urgent">🚨 Urgent</option>
+            <option value="high">🔴 High</option>
+            <option value="medium">🟡 Medium</option>
+            <option value="low">🟢 Low</option>
+          </select>
+          <button id="refreshTicketsBtnTable" class="btn btn-outline"><i class="fa fa-sync-alt"></i> Refresh</button>
+        </div>
+        <div style="margin-bottom: 0.5rem; color: #6b7280; font-size: 0.95em;">
+  Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> tickets
+</div>
+        <div style="overflow-x:auto;">
+          <table class="styled-table" id="ticketsTable">
+            <thead>
+              <tr>
+                <th>Ticket #</th>
+                <th>Subject</th>
+                <th>Description</th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Action</th>
+                <th>Assigned Technician</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsTableBody">
+              <!-- Remove this static placeholder row -->
+            </tbody>
+          </table>
+        </div>
+      </div>
 
 
       <div class="footer mt-md small text-center" style="color: var(--color-secondary);">
@@ -664,6 +773,29 @@ $dashboard_link = 'admin_dashboard.php';
           Delete Ticket
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Edit Ticket Modal -->
+  <div class="modal-bg" id="editTicketModalBg">
+    <div class="modal" id="editTicketModal" style="max-width:500px; min-width:320px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Ticket Assignment</h3>
+        <button class="modal-close" id="editTicketModalClose">&times;</button>
+      </div>
+      <form id="editTicketForm">
+        <input type="hidden" id="editTicketId" />
+        <div class="form-group">
+          <label class="form-label">Assign Technician</label>
+          <select id="editTechnicianSelect" class="form-select" required>
+            <option value="">Unassigned</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="editTicketCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -765,110 +897,156 @@ $dashboard_link = 'admin_dashboard.php';
           if (Array.isArray(data)) {
             allTickets = data;
             filteredTickets = data;
-            displayTickets();
+            displayTicketsTable();
             updateTicketInfo();
+            // Attach Edit button event listeners after table is rendered
+            document.querySelectorAll('.edit-ticket-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                const ticketId = this.getAttribute('data-id');
+                const ticket = allTickets.find(t => t.id == ticketId);
+                if (!ticket) return;
+                document.getElementById('editTicketId').value = ticketId;
+                // Populate technician dropdown
+                const select = document.getElementById('editTechnicianSelect');
+                select.innerHTML = '<option value="">Unassigned</option>';
+                technicians.forEach(tech => {
+                  const option = document.createElement('option');
+                  option.value = tech.id;
+                  option.textContent = `${tech.username} (${tech.email || 'No email'})`;
+                  if (ticket.assigned_technician_id == tech.id) option.selected = true;
+                  select.appendChild(option);
+                });
+                document.getElementById('editTicketModalBg').style.display = 'flex';
+              });
+            });
+            // Attach Delete button event listeners after table is rendered
+            document.querySelectorAll('.delete-ticket-btn').forEach(btn => {
+              btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const ticketId = this.getAttribute('data-id');
+                if (!ticketId) return;
+                if (!confirm('Are you sure you want to delete this ticket?')) return;
+                fetch('api/tickets.php', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  body: JSON.stringify({ ticket_id: ticketId })
+                })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) {
+                    showNotification('Ticket deleted successfully!', 'success');
+                    loadTickets();
+                    loadStats();
+                  } else {
+                    showNotification(data.error || 'Failed to delete ticket', 'error');
+                  }
+                })
+                .catch(() => {
+                  showNotification('Network error occurred', 'error');
+                });
+              });
+            });
           } else {
             console.error('Invalid response format:', data);
             allTickets = [];
             filteredTickets = [];
-            displayTickets();
+            displayTicketsTable();
           }
         })
         .catch(error => {
           console.error('Error loading tickets:', error);
-          document.getElementById('ticketsList').innerHTML = `
-            <div style="text-align: center; color: #ef4444; padding: 2rem;">
+          document.getElementById('ticketsTableBody').innerHTML = `
+            <tr><td colspan="10" style="text-align:center; color:#ef4444;">
               <i class="fa fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
               Error loading tickets
-            </div>
+            </td></tr>
           `;
         });
     }
     
     // Display tickets
-    function displayTickets() {
-      const container = document.getElementById('ticketsList');
-      
+    function displayTicketsTable() {
+      const tbody = document.getElementById('ticketsTableBody');
+      tbody.innerHTML = ''; // Clear any existing rows
       if (!filteredTickets.length) {
-        container.innerHTML = `
-          <div style="text-align: center; color: #6b7280; padding: 2rem;">
-            <i class="fa fa-ticket-alt" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; animation: bounce 2s infinite;"></i>
-            <div style="margin-top: 1rem; font-size: 1.1rem;">No tickets found matching your criteria.</div>
-            <div style="margin-top: 0.5rem; color: #9ca3af;">🎉 All tickets are managed!</div>
-          </div>
-        `;
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#888;">No tickets found.</td></tr>';
         return;
       }
-      
-      container.innerHTML = filteredTickets.map((ticket, index) => `
-        <div class="ticket-card ${ticket.priority}" data-ticket-id="${ticket.id}" style="animation: slideInUp 0.5s ease ${index * 0.1}s both;">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
-                <h4 style="margin: 0; color: #374151; font-size: 1.1rem;">
-                  ${ticket.priority === 'urgent' ? '🚨 ' : ticket.priority === 'high' ? '⚠️ ' : ''}${ticket.subject}
-                </h4>
-                <span class="priority-badge priority-${ticket.priority}">${ticket.priority}</span>
-                <span class="status-badge status-${ticket.status}">${ticket.status.replace('_', ' ')}</span>
-                ${ticket.assigned_technician_name ? '<span style="color: #22c55e; font-size: 0.8rem;">👤 Assigned</span>' : '<span style="color: #f59e0b; font-size: 0.8rem;">⏳ Unassigned</span>'}
-              </div>
-              <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                <strong>🎫 Ticket:</strong> ${ticket.ticket_number} • 
-                <strong>📂 Category:</strong> ${ticket.category} • 
-                <strong>📅 Created:</strong> ${new Date(ticket.created_at).toLocaleDateString()}
-              </div>
-              <div style="color: #6b7280; font-size: 0.9rem;">
-                <strong>👤 From:</strong> ${ticket.user_name} (${ticket.user_email})
-                ${ticket.assigned_technician_name ? `<br><strong>🔧 Assigned to:</strong> ${ticket.assigned_technician_name}` : ''}
-              </div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-outline btn-sm" onclick="viewTicket(${ticket.id})" title="View Details">
-                <i class="fa fa-eye"></i>
-              </button>
-              ${ticket.status === 'pending' ? `
-                <button class="btn btn-warning btn-sm" onclick="assignTicket(${ticket.id})" title="Assign to Technician">
-                  <i class="fa fa-user-plus"></i>
-                </button>
-              ` : ticket.assigned_technician_name ? `
-                <button class="btn btn-info btn-sm" onclick="reassignTicket(${ticket.id})" title="Reassign to Different Technician">
-                  <i class="fa fa-user-edit"></i>
-                </button>
-              ` : `
-                <button class="btn btn-warning btn-sm" onclick="assignTicket(${ticket.id})" title="Assign to Technician">
-                  <i class="fa fa-user-plus"></i>
-                </button>
-              `}
-              <button class="btn btn-danger btn-sm" onclick="deleteTicket(${ticket.id})" title="Delete Ticket">
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>
-          </div>
-          <div style="color: #374151; font-size: 0.9rem;">
-            ${ticket.description.substring(0, 150)}${ticket.description.length > 150 ? '...' : ''}
-          </div>
-        </div>
-      `).join('');
-      
-      // Add animation CSS
-      if (!document.getElementById('ticketAnimations')) {
-        const style = document.createElement('style');
-        style.id = 'ticketAnimations';
-        style.textContent = `
-          @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          
-          @keyframes bounce {
-            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
-            40%, 43% { transform: translate3d(0,-8px,0); }
-            70% { transform: translate3d(0,-4px,0); }
-            90% { transform: translate3d(0,-2px,0); }
-          }
+      filteredTickets.forEach(ticket => {
+        const currentValue = ticket.action_taken || ticket.status;
+        tbody.innerHTML += `
+          <tr>
+            <td><span style="font-weight:600; color:#2563eb;">${ticket.ticket_number}</span></td>
+            <td>${ticket.subject}</td>
+            <td>${ticket.description}</td>
+            <td>${ticket.user_name} <span style="color:#888; font-size:0.95em;">(${ticket.user_email})</span></td>
+            <td><span class="status-badge status-${ticket.status}">${ticket.status.replace('_',' ')}</span></td>
+            <td><span class="priority-badge priority-${ticket.priority}">${ticket.priority}</span></td>
+            <td>
+              <span class="action-badge action-${(
+                ticket.action_taken
+                  ? ticket.action_taken
+                  : ticket.status
+              ).toLowerCase().replace(/ /g,'_')}">
+                ${
+                  ticket.action_taken
+                    ? ticket.action_taken
+                    : ticket.status
+                }
+              </span>
+            </td>
+            <td>${ticket.assigned_technician_name ? `<span style='color:#059669; font-weight:500;'>${ticket.assigned_technician_name}</span><br><span style='color:#888; font-size:0.95em;'>${ticket.assigned_technician_email || ''}</span>` : '<span style="color:#f59e0b;">Unassigned</span>'}</td>
+            <td>${new Date(ticket.created_at).toLocaleDateString()}</td>
+            <td>
+              <button class="btn btn-sm btn-outline edit-ticket-btn" data-id="${ticket.id}" style="margin-bottom:4px;"><i class="fa fa-edit"></i> Edit</button>
+              <select class="admin-status-dropdown" data-id="${ticket.id}" style="padding:0.3em 0.7em; border-radius:6px; border:1px solid #d1d5db;">
+                <option value="submitted" ${ticket.status==='submitted'?'selected':''}>Submitted</option>
+                <option value="assigned" ${ticket.status==='assigned'?'selected':''}>Assigned</option>
+                <option value="in_progress" ${ticket.status==='in_progress'?'selected':''}>In Progress</option>
+                <option value="resolved" ${ticket.status==='resolved'?'selected':''}>Resolved</option>
+                <option value="closed" ${ticket.status==='closed'?'selected':''}>Closed</option>
+                <option value="escalated" ${ticket.status==='escalated'?'selected':''}>Escalated</option>
+              </select>
+              <span class="admin-status-spinner" id="spinner-${ticket.id}" style="display:none; margin-left:6px;"><i class="fa fa-spinner fa-spin"></i></span>
+              <a href="delete_ticket.php?id=${ticket.id}" class="btn btn-sm btn-danger delete-ticket-btn" data-id="${ticket.id}">Delete</a>
+            </td>
+          </tr>
         `;
-        document.head.appendChild(style);
-      }
+      });
+      // Attach event listeners for dropdowns
+      document.querySelectorAll('.admin-status-dropdown').forEach(drop => {
+        drop.addEventListener('change', function() {
+          const ticketId = this.getAttribute('data-id');
+          const newValue = this.value;
+          const spinner = document.getElementById('spinner-' + ticketId);
+          spinner.style.display = 'inline-block';
+          fetch('api/tickets.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              action: 'update_status',
+              ticket_id: ticketId,
+              status: newValue
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
+            spinner.style.display = 'none';
+            if (data.success) {
+              showNotification('Ticket status updated!', 'success');
+              loadTickets();
+            } else {
+              showNotification(data.error || 'Failed to update ticket', 'error');
+            }
+          })
+          .catch(error => {
+            spinner.style.display = 'none';
+            showNotification('Network error occurred', 'error');
+          });
+        });
+      });
     }
     
     // Update ticket info
@@ -1266,7 +1444,7 @@ $dashboard_link = 'admin_dashboard.php';
           );
         }
         
-        displayTickets();
+        displayTicketsTable();
         updateTicketInfo();
       });
       
@@ -1367,6 +1545,65 @@ $dashboard_link = 'admin_dashboard.php';
         loadTickets();
         loadStats();
       }, 2000);
+    });
+
+    // Add JS to handle Edit button and modal
+    // document.querySelectorAll('.edit-ticket-btn').forEach(btn => {
+    //   btn.addEventListener('click', function() {
+    //     const ticketId = this.getAttribute('data-id');
+    //     const ticket = allTickets.find(t => t.id == ticketId);
+    //     if (!ticket) return;
+    //     document.getElementById('editTicketId').value = ticketId;
+    //     // Populate technician dropdown
+    //     const select = document.getElementById('editTechnicianSelect');
+    //     select.innerHTML = '<option value="">Unassigned</option>';
+    //     technicians.forEach(tech => {
+    //       const option = document.createElement('option');
+    //       option.value = tech.id;
+    //       option.textContent = `${tech.username} (${tech.email || 'No email'})`;
+    //       if (ticket.assigned_technician_id == tech.id) option.selected = true;
+    //       select.appendChild(option);
+    //     });
+    //     document.getElementById('editTicketModalBg').style.display = 'flex';
+    //   });
+    // });
+    document.getElementById('editTicketModalClose').addEventListener('click', function() {
+      document.getElementById('editTicketModalBg').style.display = 'none';
+    });
+    document.getElementById('editTicketCancelBtn').addEventListener('click', function() {
+      document.getElementById('editTicketModalBg').style.display = 'none';
+    });
+    document.getElementById('editTicketForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const ticketId = document.getElementById('editTicketId').value;
+      const technicianId = document.getElementById('editTechnicianSelect').value;
+      const selectedTech = technicians.find(t => t.id == technicianId);
+      fetch('api/tickets.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          action: 'assign',
+          ticket_id: ticketId,
+          technician_id: technicianId || null,
+          technician_name: selectedTech ? selectedTech.username : '',
+          technician_phone: selectedTech ? selectedTech.phone : '',
+          technician_email: selectedTech ? selectedTech.email : ''
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showNotification('Technician assignment updated!', 'success');
+          document.getElementById('editTicketModalBg').style.display = 'none';
+          loadTickets();
+        } else {
+          showNotification(data.error || 'Failed to update assignment', 'error');
+        }
+      })
+      .catch(() => {
+        showNotification('Network error occurred', 'error');
+      });
     });
   </script>
 </body>

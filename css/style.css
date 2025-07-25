@@ -872,3 +872,125 @@ body.dark-mode .insight-details-btn:hover, body.dark-mode .insight-details-btn:f
   transform: scale(1.07);
   box-shadow: 0 8px 32px #2563eb33;
 } 
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+.modal form {
+  flex: 1 1 auto;
+  overflow-y: auto;
+} 
+
+/* --- Analytics Consistent Styling --- */
+.analytics-main-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(38,99,235,0.08);
+  padding: 2rem 2rem 2.5rem 2rem;
+}
+
+.grid.stats.mb-md {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.card,
+.card.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(38,99,235,0.06);
+  padding: 1.2em 1em;
+  margin-bottom: 1.5em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.card.stat-card {
+  box-shadow: none;
+  margin-bottom: 0;
+  padding: 1.1em 1em 1em 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.card.stat-card:nth-child(1) { background: #f1f5ff; border-left: 6px solid #2563eb; }
+.card.stat-card:nth-child(2) { background: #e6fffa; border-left: 6px solid #06b6d4; }
+.card.stat-card:nth-child(3) { background: #fff7ed; border-left: 6px solid #f59e42; }
+.card.stat-card:nth-child(4) { background: #f0fdf4; border-left: 6px solid #22c55e; }
+
+.card.mb-md {
+  box-shadow: 0 4px 24px rgba(38,99,235,0.08);
+  border-radius: 18px;
+  padding: 1.5em 1em;
+  background: #fff;
+  margin: 0 auto 1.5em auto;
+  max-width: 600px;
+}
+
+.section-analytics-tickets .card.mb-md,
+.section-analytics-outages .card.mb-md {
+  box-shadow: 0 4px 24px rgba(38,99,235,0.08);
+  border-radius: 18px;
+  padding: 1.5em 1em;
+  background: #fff;
+  margin: 0 auto 1.5em auto;
+  max-width: 600px;
+}
+
+/* Chart containers */
+.analytics-main-container canvas {
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: 700px;
+  margin: 2em auto 1em auto;
+}
+
+/* Stat number and label */
+.stat-number {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #232946;
+}
+
+.stat-label, .small {
+  color: #555;
+  font-size: 0.98rem;
+  margin-top: 0.2em;
+} 
+
+/* Ticket status badges */
+.status-submitted {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.status-assigned {
+  background: #dbeafe;
+  color: #2563eb;
+}
+.status-in_progress {
+  background: #fef3c7;
+  color: #d97706;
+}
+.status-resolved {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.status-closed {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+.status-escalated {
+  background: #fee2e2;
+  color: #b91c1c;
+} 

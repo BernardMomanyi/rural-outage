@@ -8,10 +8,17 @@ config.php
 .env.local
 .env.production
 
+# API Keys and sensitive configuration
+sendgrid_api_key.txt
+africas_talking_api.txt
+api_keys.php
+secrets.php
+
 # Log files
 *.log
 logs/
 error_log
+access_log
 
 # Temporary files
 *.tmp
@@ -25,6 +32,8 @@ error_log
 .idea/
 *.sublime-project
 *.sublime-workspace
+.project
+.settings/
 
 # OS generated files
 .DS_Store
@@ -80,4 +89,50 @@ sessions/
 
 # Cache directories
 cache/
-tmp/ 
+tmp/
+
+# Test files (optional - remove if you want to include tests)
+test_*.php
+*_test.php
+quick_test.php
+
+# Development files
+debug.php
+debug_*.php
+*_debug.php
+
+# Database dumps
+*.sql
+*.dump
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Configuration files with sensitive data
+db.php.example
+config.example.php
+
+# XAMPP specific
+xampp/
+htdocs/
+
+# IDE specific
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+
+# Composer
+composer.phar
+composer.lock
+
+# PHPUnit
+.phpunit.result.cache
+phpunit.xml
+
+# Local development
+local/
+dev/
+development/ 

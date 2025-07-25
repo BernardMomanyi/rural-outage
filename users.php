@@ -983,7 +983,7 @@ try {
 
   <!-- User Modal -->
   <div class="modal-bg" id="userModalBg">
-    <div class="modal" id="userModal" style="max-width: 600px;">
+    <div class="modal" id="userModal" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
       <div class="modal-header">
         <h3 class="modal-title" id="modalTitle">Add New User</h3>
         <button class="modal-close" id="modalClose">&times;</button>

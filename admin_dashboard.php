@@ -138,6 +138,11 @@ $pending_tickets = $pdo->query('SELECT COUNT(*) FROM user_outages WHERE status =
           <p class="mb-sm">System and account settings.</p>
           <a href="settings.php" class="btn btn-outline">System Settings</a>
         </div>
+        <div class="card">
+          <h2 class="h2 mb-sm"><i class="fa fa-bolt"></i> Meter Management</h2>
+          <p class="mb-sm">Review and manage all meter-related requests and actions.</p>
+          <a href="admin_meter_management.php" class="btn btn-outline">Manage Meter Management</a>
+        </div>
       </div>
       <div class="footer mt-md small text-center" style="color: var(--color-secondary);">
         &copy; 2024 OutageSys. All rights reserved.

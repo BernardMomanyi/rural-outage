@@ -27,45 +27,11 @@ $stmt->execute(['user']);
 $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Fetch substations for location dropdown
-$stmt = $pdo->query('SELECT name FROM substations ORDER BY name ASC');
-$substations = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$stmt = $pdo->query('SELECT id, name FROM substations ORDER BY name ASC');
+$substations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Handle outage report submission - now creates a ticket
 $report_msg = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['report_outage'])) {
-  $loc = trim($_POST['location'] ?? '');
-  $time = $_POST['time_started'] ?? '';
-  $desc = trim($_POST['description'] ?? '');
-  
-  if ($loc && $time) {
-    // Generate ticket number
-    $prefix = 'TKT';
-    $year = date('Y');
-    $month = date('m');
-    $random = strtoupper(substr(md5(uniqid()), 0, 6));
-    $ticket_number = $prefix . $year . $month . $random;
-    
-    // Create ticket instead of outage report
-    $stmt = $pdo->prepare('INSERT INTO tickets (ticket_number, user_id, user_name, user_email, user_phone, subject, description, priority, category, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([
-      $ticket_number,
-      $user_id,
-      $username,
-      $user['email'] ?? '',
-      $user['phone'] ?? '',
-      'Outage Report - ' . $loc,
-      "Outage Location: $loc\nOutage Start Time: $time\n\nDescription: $desc",
-      'urgent', // Outage reports are urgent by default
-      'outage',
-      'pending'
-    ]);
-    
-    $ticket_id = $pdo->lastInsertId();
-    $report_msg = 'Outage reported successfully! Your ticket number is: ' . $ticket_number;
-  } else {
-    $report_msg = 'Please fill all required fields.';
-  }
-}
+// Remove outage report submission logic
 
 // Handle feedback submission for tickets
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['feedback_id'])) {
@@ -375,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reopen_id'])) {
     document.addEventListener('DOMContentLoaded', function() {
       const outageForm = document.getElementById('outageForm');
       const submitBtn = document.getElementById('submitOutageBtn');
-      const locationSelect = document.getElementById('location');
+      const substationSelect = document.getElementById('substation_id');
       const timeInput = document.getElementById('time_started');
       const descriptionTextarea = document.getElementById('description');
       
@@ -387,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reopen_id'])) {
       // Enhanced form validation with visual feedback
       function validateForm() {
         let isValid = true;
-        const fields = [locationSelect, timeInput];
+        const fields = [substationSelect, timeInput];
         
         fields.forEach(field => {
           if (!field.value.trim()) {
@@ -448,7 +414,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reopen_id'])) {
       }
       
       // Enhanced field focus effects
-      [locationSelect, timeInput, descriptionTextarea].forEach(field => {
+      [substationSelect, timeInput, descriptionTextarea].forEach(field => {
         if (field) {
           field.classList.add('form-field-enhanced');
           
@@ -552,14 +518,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reopen_id'])) {
             <i class="fa fa-ticket-alt"></i>
             My Tickets
           </a>
+          <a href="meter_billing.php?action=manage" class="btn btn-outline" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <i class="fa fa-bolt"></i>
+            My Meters
+          </a>
           <a href="map.php" class="btn btn-outline" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
             <i class="fa fa-map"></i>
             View Map
           </a>
         </div>
       </div>
-
-
 
       <!-- Recent Tickets Section -->
       <div class="card mb-md">
